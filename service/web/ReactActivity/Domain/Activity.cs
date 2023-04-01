@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain
 {
-    [Table("Activities", Schema = "reactActivity")]
+    [Table("Activities", Schema = "reactactivity")]
     public class Activity
     {
         public Guid Id { get; set; }
