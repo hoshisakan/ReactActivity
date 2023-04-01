@@ -1,0 +1,66 @@
+version: '3.9'
+services:
+    db:
+        build:
+            context: ./conf/postgresql
+            dockerfile: Dockerfile
+            args:
+                - POSTGRES_TIME_ZONE=${POSTGRES_TIME_ZONE}
+                - POSTGRES_LANG_NAME=${POSTGRES_LANG_NAME}
+                - POSTGRES_LANG_INPUTFILE=${POSTGRES_LANG_INPUTFILE}
+                - POSTGRES_LANG_CHARMAP=${POSTGRES_LANG_CHARMAP}
+        image: hoshisakan/${PROJECT_NAME}/postgresql:${POSTGRES_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_postgresql
+        env_file:
+          - ./.env
+        environment:
+            - DATABASE_HOST=${DATABASE_HOST}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - PGDATA=/var/lib/postgresql/data
+            - TZ=${POSTGRES_TIME_ZONE}
+            - POSTGRES_LANG_NAME=${POSTGRES_LANG_NAME}
+        volumes:
+            - ./data/postgresql/pgdata:/var/lib/postgresql/data
+            - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
+        ports:
+            - ${POSTGRES_EXTERNAL_PORT}:${POSTGRES_INNER_PORT}
+        networks:
+            react-activity-network:
+                ipv4_address: ${POSTGRES_HOST_IP}
+        restart: on-failure:3
+
+    db_adminer:
+        build: ./conf/postgresql_admin
+        image: hoshisakan/${PROJECT_NAME}/pgadmin:${PGADMIN_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_pgadmin
+        env_file:
+          - ./.env
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:-test@test.com}
+            - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:-test123!}
+        volumes:
+            - db_adminer:/var/lib/pgadmin
+            - ./data/pgadmin/pgadmin_data:/var/lib/pgadmin
+        ports:
+            - ${PGADMIN_EXTERNAL_PORT}:${PGADMIN_INNER_PORT}
+        depends_on:
+            - db
+        networks:
+          react-activity-network:
+              ipv4_address: ${PGADMIN_HOST_IP}
+        user: root
+        restart: on-failure:2
+
+
+
+networks:
+    react-activity-network:
+        ipam:
+          config:
+            - subnet: ${NETWORK_SUBNET}
+              gateway: ${NETWORK_GATEWAY}
+
+volumes:
+    db_adminer:
