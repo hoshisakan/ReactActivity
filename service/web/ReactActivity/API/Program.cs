@@ -1,6 +1,7 @@
 using Persistence;
 using Persistence.Repository;
 using Persistence.Repository.IRepository;
+using Persistence.DbInitializer;
 
 
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,7 @@ try
         )
     );
 
+    builder.Services.AddScoped<IDbInitializer, DbInitializer>();
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     var app = builder.Build();
@@ -68,10 +70,8 @@ try
 
     try
     {
-        //TODO Read migration directory records, then according to the migration history table to determine whether to migrate the database.
-        var context = services.GetRequiredService<DataContext>();
-        await context.Database.MigrateAsync();
-        await Seed.SeedData(context);
+        IDbInitializer dbInitializer = services.GetRequiredService<IDbInitializer>();
+        await dbInitializer.SeedData();
     }
     catch (Exception ex)
     {
