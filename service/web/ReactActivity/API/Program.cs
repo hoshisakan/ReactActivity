@@ -1,9 +1,12 @@
 using Persistence;
+using Persistence.Repository;
+using Persistence.Repository.IRepository;
+
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Serilog;
 using Serilog.Events;
-
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -14,6 +17,11 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext()
+    );
 
     // Add services to the container.
 
@@ -37,6 +45,8 @@ try
             )
         )
     );
+
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
     var app = builder.Build();
 

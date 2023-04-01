@@ -30,7 +30,7 @@ elif [ "$1" = "Persistence" ]; then
 elif [ "$1" = "Domain" ]; then
     echo "Nothing to do."
 elif [ "$1" = "Application" ]; then
-    echo "Nothing to do."
+    dotnet add package Microsoft.EntityFrameworkCore.Relational --version 7.0.4
 else
     echo "Project or classlib $1 does not exist."
     exit 1
