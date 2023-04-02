@@ -47,6 +47,20 @@ try
         )
     );
 
+    string allowCorsOrigin = builder.Configuration.GetSection("CorsSettings:LocalTest:Origins").Get<string[]>()?[0] ?? string.Empty;
+    string policyName = builder.Configuration.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
+
+    if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
+    {
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy(policyName, policy =>
+            {
+                policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(allowCorsOrigin);
+            });
+        });
+    }
+
     builder.Services.AddScoped<IDbInitializer, DbInitializer>();
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -58,6 +72,8 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+
+    app.UseCors(policyName);
 
     // app.UseHttpsRedirection();
 
