@@ -1,13 +1,13 @@
-using Persistence;
-using Persistence.Repository;
-using Persistence.Repository.IRepository;
 using Persistence.DbInitializer;
+using API.Extensions;
 
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Serilog;
 using Serilog.Events;
+using MediatR;
+
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -27,42 +27,7 @@ try
     // Add services to the container.
 
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    //TODO Enable Legacy Timestamp Behavior for PostgreSQL.
-    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-    //TODO Enable DateTime Infinity Conversions for writable timestamp with time zone DateTime to PostgreSQL database.
-    AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
-
-    //TODO Add PostgreSQL database context and connection settting and change default migration save table from 'public' to specific schema name.
-    builder.Services.AddDbContext<DataContext>(
-        options => options.UseNpgsql(
-            builder.Configuration.GetConnectionString("LocalTestConnecton"),
-            x => x.MigrationsHistoryTable(
-                HistoryRepository.DefaultTableName,
-                builder.Configuration.GetSection("PostgreSQLConfigure:Schema").Get<string>()
-            )
-        )
-    );
-
-    string allowCorsOrigin = builder.Configuration.GetSection("CorsSettings:LocalTest:Origins").Get<string[]>()?[0] ?? string.Empty;
-    string policyName = builder.Configuration.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
-
-    if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
-    {
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy(policyName, policy =>
-            {
-                policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(allowCorsOrigin);
-            });
-        });
-    }
-
-    builder.Services.AddScoped<IDbInitializer, DbInitializer>();
-    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    builder.Services.AddApplicationServices(builder.Configuration);
 
     var app = builder.Build();
 
@@ -73,6 +38,7 @@ try
         app.UseSwaggerUI();
     }
 
+    string policyName = builder.Configuration.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
     app.UseCors(policyName);
 
     // app.UseHttpsRedirection();

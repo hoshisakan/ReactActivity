@@ -1,0 +1,58 @@
+using Persistence;
+using Persistence.DbInitializer;
+using Application.Activities;
+using Application.Core;
+
+using Microsoft.EntityFrameworkCore;
+using MediatR;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+
+namespace API.Extensions
+{
+    public static class ApplicationServiceExtensions
+    {
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services,
+            IConfiguration config)
+        {
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+
+            //TODO Enable Legacy Timestamp Behavior for PostgreSQL.
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //TODO Enable DateTime Infinity Conversions for writable timestamp with time zone DateTime to PostgreSQL database.
+            AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+
+            //TODO Add PostgreSQL database context and connection settting and change default migration save table from 'public' to specific schema name.
+            services.AddDbContext<DataContext>(
+                options => options.UseNpgsql(
+                    config.GetConnectionString("LocalTestConnecton"),
+                    x => x.MigrationsHistoryTable(
+                        HistoryRepository.DefaultTableName,
+                        config.GetSection("PostgreSQLConfigure:Schema").Get<string>()
+                    )
+                )
+            );
+
+            string allowCorsOrigin = config.GetSection("CorsSettings:LocalTest:Origins").Get<string[]>()?[0] ?? string.Empty;
+            string policyName = config.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
+            {
+                services.AddCors(options =>
+                {
+                    options.AddPolicy(policyName, policy =>
+                    {
+                        policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(allowCorsOrigin);
+                    });
+                });
+            }
+
+            services.AddScoped<IDbInitializer, DbInitializer>();
+            services.AddMediatR(typeof(List.Handler));
+            services.AddAutoMapper(typeof(MappingProfiles).Assembly);
+            return services;
+        }
+    }
+}
