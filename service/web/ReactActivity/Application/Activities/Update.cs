@@ -37,7 +37,7 @@ namespace Application.Activities
                 request.Activity.CreatedAt = activity?.CreatedAt ?? new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                 _mapper.Map(request.Activity, activity);
 
-                await _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveChangesAsync();
 
                 return Unit.Value;
             }

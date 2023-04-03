@@ -31,7 +31,7 @@ namespace Application.Activities
                 request.Activity.CreatedAt = DateTime.Now;
                 _context.Activities.Add(request.Activity);
 
-                await _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveChangesAsync();
 
                 return Unit.Value;
             }
