@@ -19,7 +19,6 @@ echo "Starting create solution and projects."
 
 dotnet new sln
 dotnet new webapi -n API -f net7.0
-# dotnet sln add API
 dotnet new classlib -n Application -f net7.0
 dotnet new classlib -n Domain -f net7.0
 dotnet new classlib -n Persistence -f net7.0
