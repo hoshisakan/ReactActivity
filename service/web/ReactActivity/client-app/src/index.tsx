@@ -2,6 +2,7 @@ import { StoreContext, store } from './app/stores/store'
 
 import 'semantic-ui-css/semantic.min.css'
 import './app/layout/styles.css'
+import 'react-calendar/dist/Calendar.css'
 
 import ReactDOM from 'react-dom/client'
 import reportWebVitals from './reportWebVitals'

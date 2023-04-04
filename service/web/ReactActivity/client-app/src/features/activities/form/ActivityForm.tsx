@@ -35,10 +35,12 @@ export default observer(function ActivityForm() {
         if (!activity.id)
         {
             activity.id = uuid()
+            //TODO: if activity create successfully, navigate to activity details page.
             createActivity(activity).then(() => navigate(`/activities/${activity.id}`))
         }
         else
         {
+            //TODO: if activity update successfully, navigate to activity details page.
             updateActivity(activity).then(() => navigate(`/activities/${activity.id}`))
         }
         activity.id ? updateActivity(activity) : createActivity(activity)

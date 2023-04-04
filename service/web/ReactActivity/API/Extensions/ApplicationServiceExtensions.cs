@@ -19,15 +19,15 @@ namespace API.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
-            //TODO Enable Legacy Timestamp Behavior for PostgreSQL.
+            //TODO: Enable Legacy Timestamp Behavior for PostgreSQL.
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-            //TODO Enable DateTime Infinity Conversions for writable timestamp with time zone DateTime to PostgreSQL database.
+            //TODO: Enable DateTime Infinity Conversions for writable timestamp with time zone DateTime to PostgreSQL database.
             AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
-            //TODO Add PostgreSQL database context and connection settting and change default migration save table from 'public' to specific schema name.
+            //TODO: Add PostgreSQL database context and connection setting and change default migration save table from 'public' to specific schema name.
             services.AddDbContext<DataContext>(
                 options => options.UseNpgsql(
-                    config.GetConnectionString("LocalTestConnecton"),
+                    config.GetConnectionString("LocalTestConnection"),
                     x => x.MigrationsHistoryTable(
                         HistoryRepository.DefaultTableName,
                         config.GetSection("PostgreSQLConfigure:Schema").Get<string>()

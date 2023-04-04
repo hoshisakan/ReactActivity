@@ -21,7 +21,7 @@ namespace Persistence.DbInitializer
         {
             _logger.LogInformation("Seeding database...");
 
-            //TODO Auto migrate database from records of Migration folder.
+            //TODO: Auto migrate database from records of Migration folder.
             await _db.Database.MigrateAsync();
 
             if (_db.Activities.Any())
