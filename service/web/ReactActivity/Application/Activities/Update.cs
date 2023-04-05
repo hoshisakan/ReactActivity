@@ -1,22 +1,32 @@
 using Domain;
 using Persistence;
+using Application.Core;
 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using FluentValidation;
 
 
 namespace Application.Activities
 {
     public class Update
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public Activity Activity { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class CommandValidator : AbstractValidator<Command>
+        {
+            public CommandValidator()
+            {
+                RuleFor(x => x.Activity).SetValidator(new ActivityValidator());
+            }
+        }
+
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
@@ -29,17 +39,27 @@ namespace Application.Activities
                 _logger = logger;
             }
 
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 Activity? activity = await _context.Activities.FindAsync(request.Activity.Id);
+
+                if (activity == null)
+                {
+                    return null;
+                }
 
                 request.Activity.ModifiedAt = DateTime.Now;
                 request.Activity.CreatedAt = activity?.CreatedAt ?? new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                 _mapper.Map(request.Activity, activity);
 
-                await _context.SaveChangesAsync();
+                bool result = await _context.SaveChangesAsync() > 0;
 
-                return Unit.Value;
+                if (!result)
+                {
+                    return Result<Unit>.Failure("Failed to update the activity");
+                }
+
+                return Result<Unit>.Success(Unit.Value);
             }
         }
     }

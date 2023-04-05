@@ -1,5 +1,6 @@
 using Persistence.DbInitializer;
 using API.Extensions;
+using API.Middleware;
 
 
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Serilog;
 using Serilog.Events;
 using MediatR;
-
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -30,6 +30,8 @@ try
     builder.Services.AddApplicationServices(builder.Configuration);
 
     var app = builder.Build();
+
+    app.UseMiddleware<ExceptionMiddleware>();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
