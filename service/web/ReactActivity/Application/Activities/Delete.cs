@@ -1,5 +1,6 @@
 using Domain;
 using Persistence;
+using Application.Core;
 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,12 +12,12 @@ namespace Application.Activities
 {
     public class Delete
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public Guid Id { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
@@ -29,18 +30,24 @@ namespace Application.Activities
                 _logger = logger;
             }
 
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 Activity? activity = await _context.Activities.FindAsync(request.Id);
 
-                if (activity != null)
+                if (activity == null)
                 {
-                    _context.Activities.Remove(activity);
+                    return null;
                 }
 
-                await _context.SaveChangesAsync(cancellationToken);
+                _context.Activities.Remove(activity);
 
-                return Unit.Value;
+                bool result = await _context.SaveChangesAsync(cancellationToken) > 0;
+
+                if (!result)
+                {
+                    return Result<Unit>.Failure("Failed to delete the activity");
+                }
+                return Result<Unit>.Success(Unit.Value);
             }
         }
     }

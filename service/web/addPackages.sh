@@ -33,6 +33,7 @@ elif [ "$1" = "Application" ]; then
     dotnet add package Microsoft.EntityFrameworkCore.Relational --version 7.0.4
     dotnet add package MediatR.Extensions.Microsoft.DependencyInjection --version 11.1.0
     dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection --version 12.0.0
+    dotnet add package FluentValidation.AspNetCore --version 11.3.0
 else
     echo "Project or classlib $1 does not exist."
     exit 1

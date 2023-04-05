@@ -6,7 +6,8 @@ using Application.Core;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Migrations;
-
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace API.Extensions
 {
@@ -52,6 +53,9 @@ namespace API.Extensions
             services.AddScoped<IDbInitializer, DbInitializer>();
             services.AddMediatR(typeof(List.Handler));
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);
+            services.AddFluentValidationAutoValidation();
+            services.AddValidatorsFromAssemblyContaining<Create>();
+
             return services;
         }
     }
