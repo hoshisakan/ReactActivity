@@ -5,7 +5,6 @@ import { makeAutoObservable, runInAction } from 'mobx'
 import { v4 as uuid } from 'uuid'
 import { format } from 'date-fns'
 
-
 export default class ActivityStore {
     activityRegistry = new Map<string, Activity>()
     currSelectedActivity: Activity | undefined = undefined
@@ -18,13 +17,11 @@ export default class ActivityStore {
     }
 
     get activitiesByDate() {
-        return Array.from(
-            this.activityRegistry.values()
-        ).sort(
-            (a, b) => a.date!.getTime() - b.date!.getTime()
-        ).reverse()
+        return Array.from(this.activityRegistry.values())
+            .sort((a, b) => a.date!.getTime() - b.date!.getTime())
+            .reverse()
     }
-    
+
     get groupActivities() {
         return Object.entries(
             this.activitiesByDate.reduce((activities, activity) => {
@@ -32,7 +29,7 @@ export default class ActivityStore {
                 //TODO: If the date does exists, then update the activities by date, otherwise create a new one
                 activities[date] = activities[date] ? [...activities[date], activity] : [activity]
                 return activities
-            }, {} as {[key: string]: Activity[]})
+            }, {} as { [key: string]: Activity[] })
         )
     }
 
@@ -65,8 +62,7 @@ export default class ActivityStore {
                 })
                 this.setLoadingInitial(false)
                 return activity
-            }
-            catch (error) {
+            } catch (error) {
                 console.log(error)
                 this.setLoadingInitial(false)
             }

@@ -15,11 +15,10 @@ import { categoryOptions } from '../../../app/common/options/categoryOptions'
 import MyDateInput from '../../../app/common/form/MyDateInput'
 import { Activity } from '../../../app/model/activity'
 
-
 export default observer(function ActivityForm() {
-    const {activityStore} = useStore();
-    const {createActivity, updateActivity, loading, loadActivity, loadingInitial} = activityStore
-    const {id} = useParams()
+    const { activityStore } = useStore()
+    const { createActivity, updateActivity, loading, loadActivity, loadingInitial } = activityStore
+    const { id } = useParams()
     const navigate = useNavigate()
 
     const [activity, setActivity] = useState<Activity>({
@@ -29,7 +28,7 @@ export default observer(function ActivityForm() {
         description: '',
         date: null,
         city: '',
-        venue: ''
+        venue: '',
     })
 
     const validationSchema = Yup.object({
@@ -38,47 +37,44 @@ export default observer(function ActivityForm() {
         category: Yup.string().required(),
         date: Yup.string().required('Date is required'),
         venue: Yup.string().required(),
-        city: Yup.string().required()
+        city: Yup.string().required(),
     })
 
     useEffect(() => {
-        if (id)
-        {
+        if (id) {
             loadActivity(id).then((activity) => setActivity(activity!))
         }
     }, [id, loadActivity])
 
     function handleFormSubmit(activity: Activity) {
-        if (activity.id.length === 0)
-        {
+        if (activity.id.length === 0) {
             let newActivity = {
                 ...activity,
-                id: uuid()
+                id: uuid(),
             }
             //TODO: if activity create successfully, navigate to activity details page.
             createActivity(newActivity).then(() => navigate(`/activities/${newActivity.id}`))
-        }
-        else
-        {
+        } else {
             //TODO: if activity update successfully, navigate to activity details page.
             updateActivity(activity).then(() => navigate(`/activities/${activity.id}`))
         }
     }
 
     if (loadingInitial) {
-        return <LoadingComponent content='Loading activity...' />
+        return <LoadingComponent content="Loading activity..." />
     }
 
     return (
         <Segment clearing>
-            <Header content='Activity Details' sub color='teal' />
+            <Header content="Activity Details" sub color="teal" />
             <Formik
                 validationSchema={validationSchema}
                 enableReinitialize
                 initialValues={activity}
-                onSubmit={values => handleFormSubmit(values)}>
-                {({handleSubmit, isValid, isSubmitting, dirty}) => (
-                    <Form className='ui form' onSubmit={handleSubmit} autoComplete="off">
+                onSubmit={(values) => handleFormSubmit(values)}
+            >
+                {({ handleSubmit, isValid, isSubmitting, dirty }) => (
+                    <Form className="ui form" onSubmit={handleSubmit} autoComplete="off">
                         <MyTextInput placeholder="Title" name="title" />
                         <MyTextArea rows={3} placeholder="Description" name="description" />
                         <MySelectInput options={categoryOptions} placeholder="Category" name="category" />
@@ -89,14 +85,18 @@ export default observer(function ActivityForm() {
                             timeCaption="time"
                             dateFormat={'MMMM d, yyyy h:mm aa'}
                         />
-                        <Header content='Location Details' sub color='teal' />
+                        <Header content="Location Details" sub color="teal" />
                         <MyTextInput placeholder="City" name="city" />
                         <MyTextInput placeholder="Venue" name="venue" />
                         <Button
                             disable={isSubmitting || !dirty || !isValid}
-                            loading={loading} floated="right"
-                            positive type="submit" content="Submit" />
-                        <Button as={Link} to='/activities' floated="right" color="red" type="button" content="Cancel" />
+                            loading={loading}
+                            floated="right"
+                            positive
+                            type="submit"
+                            content="Submit"
+                        />
+                        <Button as={Link} to="/activities" floated="right" color="red" type="button" content="Cancel" />
                     </Form>
                 )}
             </Formik>

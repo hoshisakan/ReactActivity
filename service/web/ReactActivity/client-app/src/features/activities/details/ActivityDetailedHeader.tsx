@@ -1,13 +1,12 @@
-import { Activity } from '../../../app/model/activity';
+import { Activity } from '../../../app/model/activity'
 
-import { observer } from 'mobx-react-lite';
-import { Link } from 'react-router-dom';
-import {Button, Header, Item, Segment, Image} from 'semantic-ui-react';
-import {format} from 'date-fns'
-
+import { observer } from 'mobx-react-lite'
+import { Link } from 'react-router-dom'
+import { Button, Header, Item, Segment, Image } from 'semantic-ui-react'
+import { format } from 'date-fns'
 
 const activityImageStyle = {
-    filter: 'brightness(30%)'
+    filter: 'brightness(30%)',
 }
 
 const activityImageTextStyle = {
@@ -16,27 +15,23 @@ const activityImageTextStyle = {
     left: '5%',
     width: '100%',
     height: 'auto',
-    color: 'white'
+    color: 'white',
 }
 
 interface Props {
     activity: Activity
 }
 
-export default observer(function ActivityDetailedHeader({activity}: Props) {
+export default observer(function ActivityDetailedHeader({ activity }: Props) {
     return (
         <Segment.Group>
-            <Segment basic attached='top' style={{padding: '0'}}>
+            <Segment basic attached="top" style={{ padding: '0' }}>
                 <Image src={`/assets/categoryImages/${activity.category}.jpg`} fluid style={activityImageStyle} />
                 <Segment basic style={activityImageTextStyle}>
                     <Item.Group>
                         <Item>
                             <Item.Content>
-                                <Header
-                                    size='huge'
-                                    content={activity.title}
-                                    style={{color: 'white'}}
-                                />
+                                <Header size="huge" content={activity.title} style={{ color: 'white' }} />
                                 <p>{format(activity.date!, 'dd MMM yyyy h:mm aa')}</p>
                                 <p>
                                     Hosted by <strong>Bob</strong>
@@ -46,10 +41,10 @@ export default observer(function ActivityDetailedHeader({activity}: Props) {
                     </Item.Group>
                 </Segment>
             </Segment>
-            <Segment attached='bottom'>
-                <Button color='teal'>JOIN THIS ACTIVITY</Button>
+            <Segment attached="bottom">
+                <Button color="teal">JOIN THIS ACTIVITY</Button>
                 <Button>Cancel attendance</Button>
-                <Button as={Link} to={`/manage/${activity.id}`} color='orange' floated='right'>
+                <Button as={Link} to={`/manage/${activity.id}`} color="orange" floated="right">
                     Manage Event
                 </Button>
             </Segment>
