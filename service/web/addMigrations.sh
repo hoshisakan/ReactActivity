@@ -32,8 +32,10 @@ if [ "$1" = "1" ]; then
     dotnet ef migrations add InitialCreate -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "2" ]; then
     echo "Adding migration 2."
+    dotnet ef migrations add IdentityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "3" ]; then
     echo "Adding migration 3."
+    dotnet ef migrations add IdentityChangeBioFieldToNullable -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "4" ]; then
     echo "Adding migration 4."
 elif [ "$1" = "5" ]; then

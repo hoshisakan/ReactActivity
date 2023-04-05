@@ -27,8 +27,9 @@ elif [ "$1" = "Persistence" ]; then
     dotnet add package Microsoft.EntityFrameworkCore --version 7.0.4
     dotnet add package Microsoft.EntityFrameworkCore.Design --version 7.0.4
     dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 7.0.3
+    dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 7.0.4
 elif [ "$1" = "Domain" ]; then
-    echo "Nothing to do."
+    dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 7.0.4
 elif [ "$1" = "Application" ]; then
     dotnet add package Microsoft.EntityFrameworkCore.Relational --version 7.0.4
     dotnet add package MediatR.Extensions.Microsoft.DependencyInjection --version 11.1.0

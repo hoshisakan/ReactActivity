@@ -1,5 +1,6 @@
 using Domain;
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,11 +11,16 @@ namespace Persistence.DbInitializer
     {
         private readonly ILogger<DbInitializer> _logger;
         private readonly DataContext _db;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IConfiguration _config;
 
-        public DbInitializer(ILogger<DbInitializer> logger, DataContext db)
+        public DbInitializer(ILogger<DbInitializer> logger, DataContext db,
+            UserManager<AppUser> userManager, IConfiguration config)
         {
             _logger = logger;
             _db = db;
+            _userManager = userManager;
+            _config = config;
         }
 
         public async Task SeedData()
@@ -23,6 +29,44 @@ namespace Persistence.DbInitializer
 
             //TODO: Auto migrate database from records of Migration folder.
             await _db.Database.MigrateAsync();
+
+            if (!_userManager.Users.Any())
+            {
+                var users = new List<AppUser>
+                {
+                    new AppUser
+                    {
+                        DisplayName = "Bob",
+                        UserName = "bob",
+                        Email = "bob@test.com"
+                    },
+                    new AppUser
+                    {
+                        DisplayName = "Tom",
+                        UserName = "tom",
+                        Email = "tom@tset.com"
+                    },
+                    new AppUser
+                    {
+                        DisplayName = "Jane",
+                        UserName = "jane",
+                        Email = "jane@test.com"
+                    }
+                };
+
+                string defaultNormalUserPassword = _config.GetSection("Roles:NormalUser:Password").Value ?? string.Empty;
+
+                if (string.IsNullOrEmpty(defaultNormalUserPassword))
+                {
+                    _logger.LogError("Default normal user password is not set in appsettings.json");
+                    return;
+                }
+
+                foreach (var user in users)
+                {
+                    await _userManager.CreateAsync(user, defaultNormalUserPassword);
+                }
+            };
 
             if (_db.Activities.Any())
             {
