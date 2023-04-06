@@ -1,19 +1,15 @@
-import ServerError from "../model/serverError"
+import ServerError from '../model/serverError';
 
-import { makeAutoObservable } from "mobx"
+import { makeAutoObservable } from 'mobx';
 
+export default class CommonStore {
+    error: ServerError | null = null;
 
-export default class CommonStore
-{
-    error: ServerError | null = null
-
-    constructor()
-    {
-        makeAutoObservable(this)
+    constructor() {
+        makeAutoObservable(this);
     }
 
-    setServerError(error: ServerError)
-    {
-        this.error = error
+    setServerError(error: ServerError) {
+        this.error = error;
     }
 }

@@ -1,28 +1,28 @@
-import LoadingComponent from '../../../app/layout/LoadingComponent'
-import { useStore } from '../../../app/stores/store'
-import ActivityDetailedHeader from './ActivityDetailedHeader'
-import ActivityDetailedInfo from './ActivityDetailedInfo'
-import ActivityDetailedChat from './ActivityDetailedChat'
-import ActivityDetailedSidebar from './ActivityDetailedSidebar'
+import LoadingComponent from '../../../app/layout/LoadingComponent';
+import { useStore } from '../../../app/stores/store';
+import ActivityDetailedHeader from './ActivityDetailedHeader';
+import ActivityDetailedInfo from './ActivityDetailedInfo';
+import ActivityDetailedChat from './ActivityDetailedChat';
+import ActivityDetailedSidebar from './ActivityDetailedSidebar';
 
-import { Grid } from 'semantic-ui-react'
-import { useParams } from 'react-router-dom'
-import { useEffect } from 'react'
-import { observer } from 'mobx-react-lite'
+import { Grid } from 'semantic-ui-react';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
 
 export default observer(function ActivityList() {
-    const { activityStore } = useStore()
-    const { currSelectedActivity: activity, loadActivity, loadingInitial } = activityStore
-    const { id } = useParams()
+    const { activityStore } = useStore();
+    const { currSelectedActivity: activity, loadActivity, loadingInitial } = activityStore;
+    const { id } = useParams();
 
     useEffect(() => {
         if (id) {
-            loadActivity(id)
+            loadActivity(id);
         }
-    }, [id, loadActivity])
+    }, [id, loadActivity]);
 
     if (loadingInitial || !activity) {
-        return <LoadingComponent />
+        return <LoadingComponent />;
     }
 
     return (
@@ -36,5 +36,5 @@ export default observer(function ActivityList() {
                 <ActivityDetailedSidebar />
             </Grid.Column>
         </Grid>
-    )
-})
+    );
+});

@@ -1,13 +1,13 @@
-import { Activity } from '../../../app/model/activity'
+import { Activity } from '../../../app/model/activity';
 
-import { observer } from 'mobx-react-lite'
-import { Link } from 'react-router-dom'
-import { Button, Header, Item, Segment, Image } from 'semantic-ui-react'
-import { format } from 'date-fns'
+import { observer } from 'mobx-react-lite';
+import { Link } from 'react-router-dom';
+import { Button, Header, Item, Segment, Image } from 'semantic-ui-react';
+import { format } from 'date-fns';
 
 const activityImageStyle = {
     filter: 'brightness(30%)',
-}
+};
 
 const activityImageTextStyle = {
     position: 'absolute',
@@ -16,10 +16,10 @@ const activityImageTextStyle = {
     width: '100%',
     height: 'auto',
     color: 'white',
-}
+};
 
 interface Props {
-    activity: Activity
+    activity: Activity;
 }
 
 export default observer(function ActivityDetailedHeader({ activity }: Props) {
@@ -49,5 +49,5 @@ export default observer(function ActivityDetailedHeader({ activity }: Props) {
                 </Button>
             </Segment>
         </Segment.Group>
-    )
-})
+    );
+});

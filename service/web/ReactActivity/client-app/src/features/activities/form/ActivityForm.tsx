@@ -1,25 +1,25 @@
-import { useStore } from '../../../app/stores/store'
+import { useStore } from '../../../app/stores/store';
 
-import { useEffect, useState } from 'react'
-import { Button, Header, Segment } from 'semantic-ui-react'
-import { observer } from 'mobx-react-lite'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import LoadingComponent from '../../../app/layout/LoadingComponent'
-import { v4 as uuid } from 'uuid'
-import { Formik, Form } from 'formik'
-import * as Yup from 'yup'
-import MyTextInput from '../../../app/common/form/MyTextInput'
-import MyTextArea from '../../../app/common/form/MyTextArea'
-import MySelectInput from '../../../app/common/form/MySelectInput'
-import { categoryOptions } from '../../../app/common/options/categoryOptions'
-import MyDateInput from '../../../app/common/form/MyDateInput'
-import { Activity } from '../../../app/model/activity'
+import { useEffect, useState } from 'react';
+import { Button, Header, Segment } from 'semantic-ui-react';
+import { observer } from 'mobx-react-lite';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import LoadingComponent from '../../../app/layout/LoadingComponent';
+import { v4 as uuid } from 'uuid';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import MyTextInput from '../../../app/common/form/MyTextInput';
+import MyTextArea from '../../../app/common/form/MyTextArea';
+import MySelectInput from '../../../app/common/form/MySelectInput';
+import { categoryOptions } from '../../../app/common/options/categoryOptions';
+import MyDateInput from '../../../app/common/form/MyDateInput';
+import { Activity } from '../../../app/model/activity';
 
 export default observer(function ActivityForm() {
-    const { activityStore } = useStore()
-    const { createActivity, updateActivity, loading, loadActivity, loadingInitial } = activityStore
-    const { id } = useParams()
-    const navigate = useNavigate()
+    const { activityStore } = useStore();
+    const { createActivity, updateActivity, loading, loadActivity, loadingInitial } = activityStore;
+    const { id } = useParams();
+    const navigate = useNavigate();
 
     const [activity, setActivity] = useState<Activity>({
         id: '',
@@ -29,7 +29,7 @@ export default observer(function ActivityForm() {
         date: null,
         city: '',
         venue: '',
-    })
+    });
 
     const validationSchema = Yup.object({
         title: Yup.string().required('The activity title is required'),
@@ -38,30 +38,30 @@ export default observer(function ActivityForm() {
         date: Yup.string().required('Date is required'),
         venue: Yup.string().required(),
         city: Yup.string().required(),
-    })
+    });
 
     useEffect(() => {
         if (id) {
-            loadActivity(id).then((activity) => setActivity(activity!))
+            loadActivity(id).then((activity) => setActivity(activity!));
         }
-    }, [id, loadActivity])
+    }, [id, loadActivity]);
 
     function handleFormSubmit(activity: Activity) {
         if (activity.id.length === 0) {
             let newActivity = {
                 ...activity,
                 id: uuid(),
-            }
+            };
             //TODO: if activity create successfully, navigate to activity details page.
-            createActivity(newActivity).then(() => navigate(`/activities/${newActivity.id}`))
+            createActivity(newActivity).then(() => navigate(`/activities/${newActivity.id}`));
         } else {
             //TODO: if activity update successfully, navigate to activity details page.
-            updateActivity(activity).then(() => navigate(`/activities/${activity.id}`))
+            updateActivity(activity).then(() => navigate(`/activities/${activity.id}`));
         }
     }
 
     if (loadingInitial) {
-        return <LoadingComponent content="Loading activity..." />
+        return <LoadingComponent content="Loading activity..." />;
     }
 
     return (
@@ -101,5 +101,5 @@ export default observer(function ActivityForm() {
                 )}
             </Formik>
         </Segment>
-    )
-})
+    );
+});

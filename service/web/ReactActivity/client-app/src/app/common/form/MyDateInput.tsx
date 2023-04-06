@@ -1,10 +1,10 @@
-import { useField } from 'formik'
-import { Form, Label } from 'semantic-ui-react'
-import DatePicker, { ReactDatePickerProps } from 'react-datepicker'
+import { useField } from 'formik';
+import { Form, Label } from 'semantic-ui-react';
+import DatePicker, { ReactDatePickerProps } from 'react-datepicker';
 
 export default function MyDateInput(props: Partial<ReactDatePickerProps>) {
     //TODO: Add exclamation mark in props.name to allow undefined.
-    const [field, meta, helper] = useField(props.name!)
+    const [field, meta, helper] = useField(props.name!);
     return (
         <Form.Field error={meta.touched && !!meta.error}>
             <DatePicker
@@ -19,5 +19,5 @@ export default function MyDateInput(props: Partial<ReactDatePickerProps>) {
                 </Label>
             ) : null}
         </Form.Field>
-    )
+    );
 }

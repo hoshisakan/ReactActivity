@@ -1,11 +1,11 @@
-import { Activity } from '../../../app/model/activity'
+import { Activity } from '../../../app/model/activity';
 
-import { Link } from 'react-router-dom'
-import { Button, Icon, Item, Segment } from 'semantic-ui-react'
-import { format } from 'date-fns'
+import { Link } from 'react-router-dom';
+import { Button, Icon, Item, Segment } from 'semantic-ui-react';
+import { format } from 'date-fns';
 
 interface Props {
-    activity: Activity
+    activity: Activity;
 }
 
 export default function ActivityListItem({ activity }: Props) {
@@ -36,5 +36,5 @@ export default function ActivityListItem({ activity }: Props) {
                 <Button as={Link} to={`/activities/${activity.id}`} color="teal" floated="right" content="View" />
             </Segment>
         </Segment.Group>
-    )
+    );
 }

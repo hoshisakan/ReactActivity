@@ -21,6 +21,7 @@
         "jsx": "react-jsx"
     },
     "include": [
-        "src"
-, "../../../backup/20230405"    ]
+        "src",
+        "../../../backup/20230405"
+    ]
 }

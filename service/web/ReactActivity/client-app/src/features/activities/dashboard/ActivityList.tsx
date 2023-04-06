@@ -1,20 +1,19 @@
-import { useStore } from '../../../app/stores/store'
-import ActivityListItem from './ActivityListItem'
+import { useStore } from '../../../app/stores/store';
+import ActivityListItem from './ActivityListItem';
 
-import { Header, Item, Segment } from 'semantic-ui-react'
-import { observer } from 'mobx-react-lite'
-import { Fragment } from 'react'
-
+import { Header, Item, Segment } from 'semantic-ui-react';
+import { observer } from 'mobx-react-lite';
+import { Fragment } from 'react';
 
 export default observer(function ActivityList() {
-    const { activityStore } = useStore()
-    const {groupActivities} = activityStore
+    const { activityStore } = useStore();
+    const { groupActivities } = activityStore;
 
     return (
         <>
             {groupActivities.map(([group, activities]) => (
                 <Fragment key={group}>
-                    <Header sub color='teal'>
+                    <Header sub color="teal">
                         {group}
                     </Header>
                     <Segment>
@@ -27,5 +26,5 @@ export default observer(function ActivityList() {
                 </Fragment>
             ))}
         </>
-    )
-})
+    );
+});

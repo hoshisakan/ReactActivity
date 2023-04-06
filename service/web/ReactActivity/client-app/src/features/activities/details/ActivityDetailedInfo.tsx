@@ -1,11 +1,11 @@
-import { Activity } from '../../../app/model/activity'
+import { Activity } from '../../../app/model/activity';
 
-import { observer } from 'mobx-react-lite'
-import { Segment, Grid, Icon } from 'semantic-ui-react'
-import { format } from 'date-fns'
+import { observer } from 'mobx-react-lite';
+import { Segment, Grid, Icon } from 'semantic-ui-react';
+import { format } from 'date-fns';
 
 interface Props {
-    activity: Activity
+    activity: Activity;
 }
 
 export default observer(function ActivityDetailedInfo({ activity }: Props) {
@@ -44,5 +44,5 @@ export default observer(function ActivityDetailedInfo({ activity }: Props) {
                 </Grid>
             </Segment>
         </Segment.Group>
-    )
-})
+    );
+});

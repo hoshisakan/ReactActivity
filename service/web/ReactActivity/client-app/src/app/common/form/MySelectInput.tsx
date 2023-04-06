@@ -1,15 +1,15 @@
-import { useField } from 'formik'
-import { Form, Label, Select } from 'semantic-ui-react'
+import { useField } from 'formik';
+import { Form, Label, Select } from 'semantic-ui-react';
 
 interface Props {
-    placeholder: string
-    name: string
-    options: any
-    label?: string
+    placeholder: string;
+    name: string;
+    options: any;
+    label?: string;
 }
 
 export default function MySelectInput(props: Props) {
-    const [field, meta, helper] = useField(props.name)
+    const [field, meta, helper] = useField(props.name);
     return (
         <Form.Field error={meta.touched && !!meta.error}>
             <label>{props.label}</label>
@@ -27,5 +27,5 @@ export default function MySelectInput(props: Props) {
                 </Label>
             ) : null}
         </Form.Field>
-    )
+    );
 }

@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { Container, Header, Segment, Image, Button } from 'semantic-ui-react'
+import { Link } from 'react-router-dom';
+import { Container, Header, Segment, Image, Button } from 'semantic-ui-react';
 
 export default function HomePage() {
     return (
@@ -9,10 +9,10 @@ export default function HomePage() {
                     <Image size="massive" src="/assets/logo.png" alt="logo" style={{ marginBottom: 12 }} />
                 </Header>
                 <Header as="h2" inverted content="Welcome to Reactivities" />
-                <Button as={Link} to='/activities' size='huge' inverted>
+                <Button as={Link} to="/activities" size="huge" inverted>
                     Take me to the activities!
                 </Button>
             </Container>
         </Segment>
-    )
+    );
 }
