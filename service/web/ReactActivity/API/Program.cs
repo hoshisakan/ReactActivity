@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Serilog;
 using Serilog.Events;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -18,6 +20,12 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    
+    builder.Services.AddControllers(opt =>
+    {
+        AuthorizationPolicy policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+        opt.Filters.Add(new AuthorizeFilter(policy));
+    });
 
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -45,6 +53,7 @@ try
 
     // app.UseHttpsRedirection();
 
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();
