@@ -1,4 +1,5 @@
 import { Activity } from '../model/activity';
+import { User, UserFormValues } from '../model/user';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
@@ -12,6 +13,15 @@ const sleep = (delay: number) => {
 };
 
 axios.defaults.baseURL = 'http://localhost:5001/api';
+
+axios.interceptors.request.use(config => {
+    const token = store.commonStore.token;
+    if (token && config.headers)
+    {
+        config.headers.Authorization = `Bearer ${token}`
+    }
+    return config;
+});
 
 axios.interceptors.response.use(
     async (response) => {
@@ -57,7 +67,7 @@ axios.interceptors.response.use(
 
 const responseBody = <T>(response: AxiosResponse<T>) => response.data;
 
-const request = {
+const requests = {
     get: <T>(url: string) => axios.get<T>(url).then(responseBody),
     post: <T>(url: string, body: {}) => axios.post<T>(url, body).then(responseBody),
     put: <T>(url: string, body: {}) => axios.put<T>(url, body).then(responseBody),
@@ -65,15 +75,22 @@ const request = {
 };
 
 const Activities = {
-    list: () => request.get<Activity[]>('/activities'),
-    details: (id: string) => request.get<Activity>(`/activities/${id}`),
+    list: () => requests.get<Activity[]>('/activities'),
+    details: (id: string) => requests.get<Activity>(`/activities/${id}`),
     create: (activity: Activity) => axios.post<void>('/activities', activity),
     update: (activity: Activity) => axios.put<void>(`/activities/${activity.id}`, activity),
     delete: (id: string) => axios.delete<void>(`/activities/${id}`),
 };
 
+const Account = {
+    current: () => requests.get<User>('/account'),
+    login: (user: UserFormValues) => requests.post<User>(`/account/login`, user),
+    register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
+}
+
 const agent = {
     Activities,
+    Account
 };
 
 export default agent;
