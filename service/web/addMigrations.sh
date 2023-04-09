@@ -38,8 +38,10 @@ elif [ "$1" = "3" ]; then
     dotnet ef migrations add IdentityChangeBioFieldToNullable -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "4" ]; then
     echo "Adding migration 4."
+    dotnet ef migrations add ActivityAttendeeAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "5" ]; then
     echo "Adding migration 5."
+    dotnet ef migrations add AddCancelledProperty -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "6" ]; then
     echo "Adding migration 6."
 elif [ "$1" = "7" ]; then
