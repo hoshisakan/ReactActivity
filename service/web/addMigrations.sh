@@ -44,6 +44,7 @@ elif [ "$1" = "5" ]; then
     dotnet ef migrations add AddCancelledProperty -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "6" ]; then
     echo "Adding migration 6."
+    dotnet ef migrations add PhotoEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "7" ]; then
     echo "Adding migration 7."
 elif [ "$1" = "8" ]; then

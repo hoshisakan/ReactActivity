@@ -4,7 +4,6 @@ import { store } from './store';
 import { Profile } from '../model/profile';
 
 import { makeAutoObservable, runInAction } from 'mobx';
-import { v4 as uuid } from 'uuid';
 import { format } from 'date-fns';
 
 export default class ActivityStore {

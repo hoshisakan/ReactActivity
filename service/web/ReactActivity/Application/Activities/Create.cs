@@ -1,7 +1,7 @@
 using Domain;
 using Persistence;
 using Application.Core;
-using Application.Interface;
+using Application.Interfaces;
 
 using MediatR;
 using Microsoft.Extensions.Logging;

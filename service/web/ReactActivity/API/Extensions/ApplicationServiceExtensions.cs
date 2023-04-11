@@ -2,15 +2,16 @@ using Persistence;
 using Persistence.DbInitializer;
 using Application.Activities;
 using Application.Core;
-using Application.Interface;
+using Application.Interfaces;
 using Infrastructure.Security;
+using Infrastructure.Photos;
+
 
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Migrations;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-
 
 namespace API.Extensions
 {
@@ -54,12 +55,14 @@ namespace API.Extensions
             }
 
             services.AddScoped<IDbInitializer, DbInitializer>();
-            services.AddMediatR(typeof(List.Handler));
+            services.AddMediatR(typeof(List.Handler).Assembly);
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);
             services.AddFluentValidationAutoValidation();
             services.AddValidatorsFromAssemblyContaining<Create>();
             services.AddHttpContextAccessor();
             services.AddScoped<IUserAccessor, UserAccessor>();
+            services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+            services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
 
             return services;
         }

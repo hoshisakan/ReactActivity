@@ -1,6 +1,6 @@
 using Application.Core;
 using Persistence;
-using Application.Interface;
+using Application.Interfaces;
 using Domain;
 
 using MediatR;

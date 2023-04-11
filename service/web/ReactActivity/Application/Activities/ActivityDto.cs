@@ -15,6 +15,6 @@ namespace Application.Activities
         public bool IsCancelled { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime ModifiedAt { get; set; }
-        public ICollection<Profile> Attendees { get; set; }
+        public ICollection<AttendeeDto> Attendees { get; set; }
     }
 }
