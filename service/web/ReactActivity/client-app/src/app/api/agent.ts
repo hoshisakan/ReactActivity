@@ -1,5 +1,6 @@
 import { Activity, ActivityFormValues } from '../model/activity';
 import { User, UserFormValues } from '../model/user';
+import { Photo, Profile } from '../model/profile';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
@@ -14,11 +15,10 @@ const sleep = (delay: number) => {
 
 axios.defaults.baseURL = 'http://localhost:5001/api';
 
-axios.interceptors.request.use(config => {
+axios.interceptors.request.use((config) => {
     const token = store.commonStore.token;
-    if (token && config.headers)
-    {
-        config.headers.Authorization = `Bearer ${token}`
+    if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
@@ -87,11 +87,25 @@ const Account = {
     current: () => requests.get<User>('/account'),
     login: (user: UserFormValues) => requests.post<User>(`/account/login`, user),
     register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
+};
+
+const Profiles = {
+    get: (username: string) => requests.get<Profile>(`/profiles/${username}`),
+    uploadPhoto: (file: Blob) => {
+        let formData = new FormData();
+        formData.append('File', file);
+        return axios.post<Photo>('photos', formData, {
+            headers: { 'Content-type': 'multipart/form-data' }
+        });
+    },
+    setMainPhoto: (id: string) => requests.post(`/photos/${id}/setMain`, {}),
+    deletePhoto: (id: string) => requests.del(`/photos/${id}`),
 }
 
 const agent = {
     Activities,
-    Account
+    Account,
+    Profiles
 };
 
 export default agent;
