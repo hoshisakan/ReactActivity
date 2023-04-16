@@ -1,11 +1,11 @@
 import { useStore } from '../../../app/stores/store';
 import ActivityList from './ActivityList';
 import LoadingComponent from '../../../app/layout/LoadingComponent';
+import ActivityFilters from './ActivityFilters';
 
 import { Grid } from 'semantic-ui-react';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import ActivityFilters from './ActivityFilters';
 
 export default observer(function ActivityDashboard() {
     const { activityStore } = useStore();

@@ -58,7 +58,19 @@ namespace Persistence.DbInitializer
                         DisplayName = "Jane",
                         UserName = "jane",
                         Email = "jane@test.com"
-                    }
+                    },
+                    new AppUser
+                    {
+                        DisplayName = "John",
+                        UserName = "john",
+                        Email = "john@test.com"
+                    },
+                    new AppUser
+                    {
+                        DisplayName = "Helen",
+                        UserName = "helen",
+                        Email = "helen@test.com"
+                    },
                 };
 
                 string defaultNormalUserPassword = _config.GetSection("Roles:NormalUser:Password").Value ?? string.Empty;
@@ -89,6 +101,11 @@ namespace Persistence.DbInitializer
                             new ActivityAttendee
                             {
                                 AppUser = users[0],
+                                IsHost = true
+                            },
+                            new ActivityAttendee
+                            {
+                                AppUser = users[4],
                                 IsHost = true
                             }
                         },
@@ -205,7 +222,17 @@ namespace Persistence.DbInitializer
                             {
                                 AppUser = users[1],
                                 IsHost = true
-                            }
+                            },
+                            new ActivityAttendee
+                            {
+                                AppUser = users[3],
+                                IsHost = true
+                            },
+                            new ActivityAttendee
+                            {
+                                AppUser = users[4],
+                                IsHost = true
+                            },
                         },
                         CreatedAt = DateTime.UtcNow,
                         ModifiedAt = DateTime.UtcNow

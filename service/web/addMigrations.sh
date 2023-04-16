@@ -50,6 +50,7 @@ elif [ "$1" = "7" ]; then
     dotnet ef migrations add CommentEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "8" ]; then
     echo "Adding migration 8."
+    dotnet ef migrations add FollowingEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "9" ]; then
     echo "Adding migration 9."
 elif [ "$1" = "10" ]; then

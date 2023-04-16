@@ -111,7 +111,7 @@ export default class ActivityStore {
             await agent.Activities.update(activity);
             runInAction(() => {
                 if (activity.id) {
-                    let updatedActivity = {...this.getActivity(activity.id), ...activity};
+                    let updatedActivity = { ...this.getActivity(activity.id), ...activity };
                     this.activityRegistry.set(activity.id, updatedActivity as Activity);
                     this.currSelectedActivity = updatedActivity as Activity;
                 }
@@ -145,7 +145,7 @@ export default class ActivityStore {
             runInAction(() => {
                 if (this.currSelectedActivity?.isGoing) {
                     this.currSelectedActivity.attendees = this.currSelectedActivity.attendees?.filter(
-                        a => a.username !== user?.username
+                        (a) => a.username !== user?.username
                     );
                     this.currSelectedActivity.isGoing = false;
                 } else {
@@ -180,9 +180,20 @@ export default class ActivityStore {
                 this.loading = false;
             });
         }
-    }
+    };
 
     clearSelectedActivity = () => {
         this.currSelectedActivity = undefined;
-    }
+    };
+
+    updateAttendeeFollowing = (username: string) => {
+        this.activityRegistry.forEach((activity) => {
+            activity.attendees?.forEach((attendee) => {
+                if (attendee.username === username) {
+                    attendee.following ? attendee.followersCount-- : attendee.followersCount++;
+                    attendee.following = !attendee.following;
+                }
+            });
+        });
+    };
 }

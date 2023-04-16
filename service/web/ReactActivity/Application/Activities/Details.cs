@@ -1,6 +1,6 @@
-using Domain;
 using Persistence;
 using Application.Core;
+using Application.Interfaces;
 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -21,20 +21,26 @@ namespace Application.Activities
         {
             private readonly DataContext _context;
             private readonly IMapper _mapper;
+            private readonly IUserAccessor _userAccessor;
             private readonly ILogger<Details> _logger;
 
 
-            public Handler(DataContext context, IMapper mapper, ILogger<Details> logger)
+            public Handler(DataContext context, IMapper mapper,
+                IUserAccessor userAccess, ILogger<Details> logger)
             {
                 _context = context;
                 _mapper = mapper;
+                _userAccessor = userAccess;
                 _logger = logger;
             }
 
             public async Task<Result<ActivityDto>> Handle(Query request, CancellationToken cancellationToken)
             {
                 ActivityDto activity = await _context.Activities
-                    .ProjectTo<ActivityDto>(_mapper.ConfigurationProvider)
+                    .ProjectTo<ActivityDto>(
+                        _mapper.ConfigurationProvider,
+                        new {currentUsername = _userAccessor.GetUsername()}
+                    )
                     .FirstOrDefaultAsync(x => x.Id == request.Id);
 
                 return Result<ActivityDto>.Success(activity);
