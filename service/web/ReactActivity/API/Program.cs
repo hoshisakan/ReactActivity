@@ -1,13 +1,10 @@
 using Persistence.DbInitializer;
 using API.Extensions;
 using API.Middleware;
+using API.SignalR;
 
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Serilog;
 using Serilog.Events;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
@@ -57,6 +54,7 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+    app.MapHub<ChatHub>("/chat");
 
     using var scope = app.Services.CreateScope();
     var services = scope.ServiceProvider;

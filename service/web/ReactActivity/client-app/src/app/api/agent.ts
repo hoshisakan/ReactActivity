@@ -1,6 +1,6 @@
-import { Activity, ActivityFormValues } from '../model/activity';
-import { User, UserFormValues } from '../model/user';
-import { Photo, Profile } from '../model/profile';
+import { Activity, ActivityFormValues } from '../models/activity';
+import { User, UserFormValues } from '../models/user';
+import { Photo, Profile } from '../models/profile';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';

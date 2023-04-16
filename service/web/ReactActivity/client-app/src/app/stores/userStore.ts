@@ -1,6 +1,6 @@
 import agent from '../api/agent';
 import { store } from './store';
-import { User, UserFormValues } from '../model/user';
+import { User, UserFormValues } from '../models/user';
 import { router } from '../router/Routes';
 
 import { makeAutoObservable, runInAction } from 'mobx';

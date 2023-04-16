@@ -1,5 +1,5 @@
 import ProfilePhotos from './ProfilePhotos';
-import { Profile } from '../../app/model/profile';
+import { Profile } from '../../app/models/profile';
 
 import { Tab } from 'semantic-ui-react';
 

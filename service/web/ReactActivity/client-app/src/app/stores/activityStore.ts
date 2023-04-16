@@ -1,7 +1,7 @@
 import agent from '../api/agent';
-import { Activity, ActivityFormValues } from '../model/activity';
+import { Activity, ActivityFormValues } from '../models/activity';
 import { store } from './store';
-import { Profile } from '../model/profile';
+import { Profile } from '../models/profile';
 
 import { makeAutoObservable, runInAction } from 'mobx';
 import { format } from 'date-fns';
@@ -180,5 +180,9 @@ export default class ActivityStore {
                 this.loading = false;
             });
         }
+    }
+
+    clearSelectedActivity = () => {
+        this.currSelectedActivity = undefined;
     }
 }

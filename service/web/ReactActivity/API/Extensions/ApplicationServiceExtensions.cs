@@ -49,7 +49,11 @@ namespace API.Extensions
                 {
                     options.AddPolicy(policyName, policy =>
                     {
-                        policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(allowCorsOrigin);
+                        policy
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .AllowCredentials()
+                            .WithOrigins(allowCorsOrigin);
                     });
                 });
             }
@@ -63,6 +67,7 @@ namespace API.Extensions
             services.AddScoped<IUserAccessor, UserAccessor>();
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
             services.Configure<CloudinarySettings>(config.GetSection("Cloudinary"));
+            services.AddSignalR();
 
             return services;
         }

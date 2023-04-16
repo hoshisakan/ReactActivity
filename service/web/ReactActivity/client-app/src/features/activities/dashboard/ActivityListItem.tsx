@@ -1,4 +1,4 @@
-import { Activity } from '../../../app/model/activity';
+import { Activity } from '../../../app/models/activity';
 import ActivityListItemAttendee from './ActivityListItemAttendee';
 
 import { Link } from 'react-router-dom';

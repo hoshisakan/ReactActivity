@@ -1,4 +1,4 @@
-import { Photo, Profile } from '../../app/model/profile';
+import { Photo, Profile } from '../../app/models/profile';
 import { useStore } from '../../app/stores/store';
 import PhotoUploadWidget from '../../app/common/imageUpload/PhotoUploadWidget';
 

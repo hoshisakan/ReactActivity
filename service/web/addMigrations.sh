@@ -47,6 +47,7 @@ elif [ "$1" = "6" ]; then
     dotnet ef migrations add PhotoEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "7" ]; then
     echo "Adding migration 7."
+    dotnet ef migrations add CommentEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "8" ]; then
     echo "Adding migration 8."
 elif [ "$1" = "9" ]; then

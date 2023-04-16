@@ -1,5 +1,5 @@
 import agent from "../api/agent";
-import { Photo, Profile } from "../model/profile";
+import { Photo, Profile } from "../models/profile";
 import { store } from "./store";
 
 import { makeAutoObservable, runInAction } from "mobx";

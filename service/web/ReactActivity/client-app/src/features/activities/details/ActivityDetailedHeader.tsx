@@ -1,4 +1,4 @@
-import { Activity } from '../../../app/model/activity';
+import { Activity } from '../../../app/models/activity';
 import { useStore } from '../../../app/stores/store';
 
 import { observer } from 'mobx-react-lite';

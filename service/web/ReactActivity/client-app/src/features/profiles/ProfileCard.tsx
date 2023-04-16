@@ -1,4 +1,4 @@
-import { Profile } from '../../app/model/profile';
+import { Profile } from '../../app/models/profile';
 
 import { observer } from 'mobx-react-lite';
 import { Link } from 'react-router-dom';

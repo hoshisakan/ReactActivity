@@ -51,7 +51,7 @@ namespace Persistence.DbInitializer
                     {
                         DisplayName = "Tom",
                         UserName = "tom",
-                        Email = "tom@tset.com"
+                        Email = "tom@test.com"
                     },
                     new AppUser
                     {

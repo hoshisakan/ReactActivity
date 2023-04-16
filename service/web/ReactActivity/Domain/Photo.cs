@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Domain
 {
+    [Table("Photos", Schema = "reactactivity")]
     public class Photo
     {
         public string Id { get; set; }
