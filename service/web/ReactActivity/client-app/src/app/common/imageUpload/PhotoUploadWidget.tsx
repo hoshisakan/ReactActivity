@@ -1,7 +1,7 @@
 import PhotoWidgetDropzone from './PhotoWidgetDropzone';
 
 import { useEffect, useState } from 'react';
-import { Button, Grid, Header, Image } from 'semantic-ui-react';
+import { Button, Grid, Header } from 'semantic-ui-react';
 import PhotoWidgetCropper from './PhotoWidgetCropper';
 
 interface Props {

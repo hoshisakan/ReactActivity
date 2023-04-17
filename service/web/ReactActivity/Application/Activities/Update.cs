@@ -3,7 +3,6 @@ using Persistence;
 using Application.Core;
 
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using FluentValidation;

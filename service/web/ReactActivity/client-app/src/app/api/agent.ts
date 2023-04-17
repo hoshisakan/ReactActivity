@@ -1,11 +1,12 @@
 import { Activity, ActivityFormValues } from '../models/activity';
 import { User, UserFormValues } from '../models/user';
 import { Photo, Profile } from '../models/profile';
+import { store } from '../stores/store';
+import { router } from '../router/Routes';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
-import { router } from '../router/Routes';
-import { store } from '../stores/store';
+
 
 const sleep = (delay: number) => {
     return new Promise((resolve) => {
@@ -91,6 +92,7 @@ const Account = {
 
 const Profiles = {
     get: (username: string) => requests.get<Profile>(`/profiles/${username}`),
+    updateProfile: (profile: Partial<Profile>) => requests.put(`/profiles`, profile),
     uploadPhoto: (file: Blob) => {
         let formData = new FormData();
         formData.append('File', file);
@@ -102,13 +104,13 @@ const Profiles = {
     deletePhoto: (id: string) => requests.del(`/photos/${id}`),
     updateFollower: (username: string) => requests.post(`/follow/${username}`, {}),
     listFollowings: (username: string, predicate: string) =>
-        requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`),
+        requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`)
 };
 
 const agent = {
     Activities,
     Account,
-    Profiles,
+    Profiles
 };
 
 export default agent;
