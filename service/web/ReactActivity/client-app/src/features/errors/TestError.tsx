@@ -1,10 +1,11 @@
+import ValidationError from './ValidationError';
+
 import React from 'react';
 import { Button, Header, Segment } from 'semantic-ui-react';
 import axios from 'axios';
-import ValidationError from './ValidationError';
 
 export default function TestErrors() {
-    const base = 'http://localhost:5001/api/';
+    const base = process.env.REACT_APP_API_URL;
     const [errors, setErrors] = React.useState(null);
 
     function handleNotFound() {
