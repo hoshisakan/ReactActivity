@@ -18,11 +18,13 @@ services:
           - LANG=${NGINX_LANG_NAME}
         volumes:
             - ./web/production/frontend/dist:/usr/share/nginx/dist
+            - ./web/production/certs:/etc/nginx/ssl
             - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
             - ./conf/nginx/conf.d:/etc/nginx/conf.d
             - ./logs/nginx:/var/log/nginx
         ports:
             - ${NGINX_HTTP_INNER_PORT}:${NGINX_HTTP_INNER_PORT}
+            - ${NGINX_HTTPS_INNER_PORT}:${NGINX_HTTPS_INNER_PORT}
         depends_on:
             - db
             - backend
@@ -60,10 +62,9 @@ services:
             - DOTNET_POSTGRES_PORT=${POSTGRES_EXTERNAL_PORT}
         volumes:
             - ./web/production/backend:/production/backend
+            - ./web/production/certs:/production/certs
             - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
             - ./logs/backend:/var/log/backend
-        # expose:
-        #   - ${DOTNET_EXPOSE_PORT}
         ports:
             - ${DOTNET_EXTERNAL_PORT}:${DOTNET_INNER_PORT}
         depends_on:
