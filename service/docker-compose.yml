@@ -1,5 +1,79 @@
 version: '3.9'
 services:
+    reverse_proxy:
+        build:
+            context: ./conf/nginx
+            dockerfile: Dockerfile
+            args:
+                - NGINX_TIME_ZONE=${NGINX_TIME_ZONE}
+                - NGINX_LANG_NAME=${NGINX_LANG_NAME}
+                - NGINX_LANG_INPUTFILE=${NGINX_LANG_INPUTFILE}
+                - NGINX_LANG_CHARMAP=${NGINX_LANG_CHARMAP}
+                - DEBIAN_FRONTEND=${NGINX_DEBIAN_FRONTEND}
+        image: hoshisakan/${PROJECT_NAME}/nginx:${NGINX_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_nginx
+        env_file:
+          - ./.env
+        environment:
+          - LANG=${NGINX_LANG_NAME}
+        volumes:
+            - ./web/production/frontend/dist:/usr/share/nginx/dist
+            - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+            - ./conf/nginx/conf.d:/etc/nginx/conf.d
+            - ./logs/nginx:/var/log/nginx
+        ports:
+            - ${NGINX_HTTP_INNER_PORT}:${NGINX_HTTP_INNER_PORT}
+        depends_on:
+            - db
+            - backend
+        networks:
+          react-activity-network:
+              ipv4_address: ${NGINX_HOST_IP}
+        user: root
+        tty: true
+        restart: on-failure:3
+
+    backend:
+        build:
+            context: ./conf/dotnet/ubuntu
+            dockerfile: Dockerfile
+            args:
+                - DOTNET_INSTALLED_VERSION=${DOTNET_INSTALLED_VERSION}
+                - DOTNET_TIME_ZONE=${DOTNET_TIME_ZONE}
+                - DOTNET_LANG_NAME=${DOTNET_LANG_NAME}
+                - DOTNET_LANG_INPUTFILE=${DOTNET_LANG_INPUTFILE}
+                - DOTNET_LANG_CHARMAP=${DOTNET_LANG_CHARMAP}
+                - DEBIAN_FRONTEND=${DOTNET_DEBIAN_FRONTEND}
+                - DOTNET_POSTGRESQL_CLIENT_HOME=${DOTNET_POSTGRESQL_CLIENT_HOME}
+                - DOTNET_POSTGRESQL_CLIENT_VERSION=${DOTNET_POSTGRESQL_CLIENT_VERSION}
+                - POSTGRES_DATA_BACKUP_PATH=:${POSTGRES_DATA_BACKUP_PATH}
+                - DOTNET_PACKAGES_PATH=${DOTNET_PACKAGES_PATH}
+        image: hoshisakan/${PROJECT_NAME}/dotnet:${DOTNET_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_backend
+        env_file:
+            - ./.env
+        environment:
+            - DOTNET_LANG_NAME=${DOTNET_LANG_NAME}
+            - PGPASSWORD=${POSTGRES_PASSWORD}
+            - DOTNET_POSTGRES_USER=${POSTGRES_USER}
+            - DOTNET_POSTGRES_HOST_IP=${POSTGRES_HOST_IP}
+            - DOTNET_POSTGRES_PORT=${POSTGRES_EXTERNAL_PORT}
+        volumes:
+            - ./web/production/backend:/production/backend
+            - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
+            - ./logs/backend:/var/log/backend
+        # expose:
+        #   - ${DOTNET_EXPOSE_PORT}
+        ports:
+            - ${DOTNET_EXTERNAL_PORT}:${DOTNET_INNER_PORT}
+        depends_on:
+          - db
+        networks:
+            react-activity-network:
+                ipv4_address: ${DOTNET_HOST_IP}
+        tty: true
+        restart: on-failure:3
+
     db:
         build:
             context: ./conf/postgresql

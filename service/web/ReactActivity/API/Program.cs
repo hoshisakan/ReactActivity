@@ -34,6 +34,12 @@ try
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddIdentityServices(builder.Configuration);
 
+    builder.WebHost.UseKestrel(options =>
+    {
+        options.ListenAnyIP(builder.Configuration.GetSection("KestrelSettings:Endpoints:Http:Port").Get<int>());
+        options.Limits.MaxRequestBodySize = int.MaxValue;
+    });
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -45,7 +51,7 @@ try
         app.UseSwaggerUI();
     }
 
-    string policyName = builder.Configuration.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
+    string policyName = builder.Configuration.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;
     app.UseCors(policyName);
 
     // app.UseHttpsRedirection();

@@ -32,7 +32,7 @@ namespace API.Extensions
             //TODO: Add PostgreSQL database context and connection setting and change default migration save table from 'public' to specific schema name.
             services.AddDbContext<DataContext>(
                 options => options.UseNpgsql(
-                    config.GetConnectionString("LocalTestConnection"),
+                    config.GetConnectionString("DefaultConnection"),
                     x => x.MigrationsHistoryTable(
                         HistoryRepository.DefaultTableName,
                         config.GetSection("PostgreSQLConfigure:Schema").Get<string>()
@@ -40,10 +40,12 @@ namespace API.Extensions
                 )
             );
 
-            string allowCorsOrigin = config.GetSection("CorsSettings:LocalTest:Origins").Get<string[]>()?[0] ?? string.Empty;
-            string policyName = config.GetSection("CorsSettings:LocalTest:PolicyName").Get<string>() ?? string.Empty;
+            // string allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>()?[0] ?? string.Empty;
+            string[] allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>() ?? new string[] {};
+            string policyName = config.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;
 
-            if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
+            // if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
+            if (!allowCorsOrigin.Any(a => String.IsNullOrEmpty(a)) && !string.IsNullOrEmpty(policyName))
             {
                 services.AddCors(options =>
                 {

@@ -24,7 +24,7 @@ namespace API.Extensions
             })
             .AddEntityFrameworkStores<DataContext>();
 
-            string secretKey = config["JWTSettings:LocalTest:TokenKey"] ?? string.Empty;
+            string secretKey = config["JWTSettings:TokenKey"] ?? string.Empty;
             
             if (string.IsNullOrEmpty(secretKey))
             {
@@ -37,7 +37,9 @@ namespace API.Extensions
                     opt.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(secretKey)
+                        ),
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };

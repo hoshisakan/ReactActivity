@@ -28,7 +28,7 @@ namespace API.Services
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
-            string secretKey = _config.GetSection("JWTSettings:LocalTest:TokenKey").Value ?? string.Empty;
+            string secretKey = _config.GetSection("JWTSettings:TokenKey").Value ?? string.Empty;
             
             if (string.IsNullOrEmpty(secretKey))
             {

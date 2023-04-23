@@ -9,27 +9,27 @@ export default function TestErrors() {
     const [errors, setErrors] = React.useState(null);
 
     function handleNotFound() {
-        axios.get(`${base}buggy/not-found`).catch((err) => console.log(err.response));
+        axios.get(`${base}/buggy/not-found`).catch((err) => console.log(err.response));
     }
 
     function handleBadRequest() {
-        axios.get(`${base}buggy/bad-request`).catch((err) => console.log(err.response));
+        axios.get(`${base}/buggy/bad-request`).catch((err) => console.log(err.response));
     }
 
     function handleServerError() {
-        axios.get(`${base}buggy/server-error`).catch((err) => console.log(err.response));
+        axios.get(`${base}/buggy/server-error`).catch((err) => console.log(err.response));
     }
 
     function handleUnauthorized() {
-        axios.get(`${base}buggy/unauthorized`).catch((err) => console.log(err.response));
+        axios.get(`${base}/buggy/unauthorized`).catch((err) => console.log(err.response));
     }
 
     function handleBadGuid() {
-        axios.get(`${base}activities/not-a-guid`).catch((err) => console.log(err.response));
+        axios.get(`${base}/activities/not-a-guid`).catch((err) => console.log(err.response));
     }
 
     function handleValidationError() {
-        axios.post(`${base}activities`, {}).catch((err) => setErrors(err));
+        axios.post(`${base}/activities`, {}).catch((err) => setErrors(err));
     }
 
     return (
