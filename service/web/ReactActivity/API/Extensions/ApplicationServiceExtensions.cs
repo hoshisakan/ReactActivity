@@ -45,7 +45,7 @@ namespace API.Extensions
             string policyName = config.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;
 
             // if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
-            if (!allowCorsOrigin.Any(a => String.IsNullOrEmpty(a)) && !string.IsNullOrEmpty(policyName))
+            if (allowCorsOrigin.Length > 0 && !allowCorsOrigin.Any(a => String.IsNullOrEmpty(a)) && !string.IsNullOrEmpty(policyName))
             {
                 services.AddCors(options =>
                 {

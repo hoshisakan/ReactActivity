@@ -25,6 +25,8 @@ if [ "$1" = "API" ]; then
     dotnet add package Serilog.AspNetCore --version 6.0.1
     dotnet add package System.IdentityModel.Tokens.Jwt --version 6.28.1
     dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 7.0.4
+    dotnet add package Quartz --version 3.6.2
+    dotnet add package Quartz.Extensions.Hosting --version 3.6.2
 elif [ "$1" = "Persistence" ]; then
     dotnet add package Microsoft.EntityFrameworkCore --version 7.0.4
     dotnet add package Microsoft.EntityFrameworkCore.Design --version 7.0.4

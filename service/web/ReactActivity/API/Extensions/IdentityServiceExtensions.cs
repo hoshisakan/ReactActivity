@@ -8,6 +8,9 @@ using System.Text;
 using Infrastructure.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Primitives;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection;
 
 
 namespace API.Extensions
@@ -59,6 +62,15 @@ namespace API.Extensions
                         }
                     };
                 });
+
+            //TODO: Add Data Protection for encrypting and decrypting data.
+            services.AddDataProtection().UseCryptographicAlgorithms(
+                new AuthenticatedEncryptorConfiguration()
+                {
+                    EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+                    ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+                }
+            );
 
             services.AddAuthorization(opt =>
             {

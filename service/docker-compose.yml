@@ -59,7 +59,7 @@ services:
             - PGPASSWORD=${POSTGRES_PASSWORD}
             - DOTNET_POSTGRES_USER=${POSTGRES_USER}
             - DOTNET_POSTGRES_HOST_IP=${POSTGRES_HOST_IP}
-            - DOTNET_POSTGRES_PORT=${POSTGRES_EXTERNAL_PORT}
+            - DOTNET_POSTGRES_PORT=${POSTGRES_INNER_PORT}
         volumes:
             - ./web/production/backend:/production/backend
             - ./web/production/certs:/production/certs
