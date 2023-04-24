@@ -44,7 +44,9 @@ namespace API.Extensions
                             Encoding.UTF8.GetBytes(secretKey)
                         ),
                         ValidateIssuer = false,
-                        ValidateAudience = false
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
                     };
                     opt.Events = new JwtBearerEvents
                     {

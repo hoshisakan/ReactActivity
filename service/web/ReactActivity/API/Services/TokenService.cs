@@ -25,17 +25,26 @@ namespace API.Services
             {
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             string secretKey = _config.GetSection("JWTSettings:TokenKey").Value ?? string.Empty;
-            
+            int accessTokenExpirationTime = _config.GetSection("JWTSettings:AccessTokenExpirationTime").Get<int?>() ?? -1;
+            int refreshTokenExpirationTime = _config.GetSection("JWTSettings:RefreshTokenExpirationTime").Get<int?>() ?? -1;
+
             if (string.IsNullOrEmpty(secretKey))
             {
                 throw new Exception("Secret key is not set.");
             }
-
-            // _logger.LogInformation($"Test read secret key: {secretKey}");
+            if (accessTokenExpirationTime == -1)
+            {
+                throw new Exception("Access token expires time is not set.");
+            }
+            if (refreshTokenExpirationTime == -1)
+            {
+                throw new Exception("Refresh token expires time is not set.");
+            }
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
@@ -43,7 +52,8 @@ namespace API.Services
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(7),
+                // Expires = DateTime.Now.AddMinutes(accessTokenExpirationTime),
+                Expires = DateTime.Now.AddSeconds(accessTokenExpirationTime),
                 SigningCredentials = creds
             };
 

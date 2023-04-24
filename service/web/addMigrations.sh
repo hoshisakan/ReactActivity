@@ -53,6 +53,7 @@ elif [ "$1" = "8" ]; then
     dotnet ef migrations add FollowingEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "9" ]; then
     echo "Adding migration 9."
+    dotnet ef migrations add RefreshTokenEntityAdded -s API -p Persistence -c DataContext --verbose
 elif [ "$1" = "10" ]; then
     echo "Adding migration 10."
 elif [ "$1" = "all" ]; then
