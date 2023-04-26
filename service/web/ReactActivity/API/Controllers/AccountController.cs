@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using System.Security.Claims;
 
 
@@ -17,12 +18,17 @@ namespace API.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly TokenService _tokenService;
+        private readonly IDistributedCache _cache;
+        private readonly IConfiguration _config;
         private readonly ILogger<AppUser> _logger;
 
-        public AccountController(UserManager<AppUser> userManager, TokenService tokenService, ILogger<AppUser> logger)
+        public AccountController(UserManager<AppUser> userManager, TokenService tokenService,
+            IDistributedCache cache, IConfiguration config, ILogger<AppUser> logger)
         {
             _userManager = userManager;
             _tokenService = tokenService;
+            _cache = cache;
+            _config = config;
             _logger = logger;
         }
 
@@ -43,7 +49,26 @@ namespace API.Controllers
 
             if (result)
             {
-                return CreateUserObject(user);
+                UserDto? userDto = await CreateUserObject(user);
+
+                string userSetTokenCacheKey = "user";
+
+                //TODO: Set cache, but don't expire it.
+                // await _cache.SetStringAsync(userSetTokenCacheKey, userDto.Token);
+
+                //TODO: Set cache and add expiration time.
+                await _cache.SetStringAsync(
+                    "user", userDto.Token,
+                    new DistributedCacheEntryOptions{
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                        // AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30)
+                    }
+                );
+
+                string decryptToken = await _cache.GetStringAsync(userSetTokenCacheKey) ?? "Empty";
+                _logger.LogInformation($"username: {user.UserName}, _cache: {decryptToken}");
+
+                return userDto;
             }
             return Unauthorized();
         }
@@ -79,7 +104,7 @@ namespace API.Controllers
 
             if (result.Succeeded)
             {
-                return CreateUserObject(user);
+                return await CreateUserObject(user);
             }
             return BadRequest(result.Errors);
         }
@@ -96,17 +121,19 @@ namespace API.Controllers
                 return Unauthorized();
             }
 
-            return CreateUserObject(user);
+            return await CreateUserObject(user);
         }
 
         [HttpGet]
-        private UserDto CreateUserObject(AppUser user)
+        private async Task<UserDto> CreateUserObject(AppUser user)
         {
+            TokenDto token = await _tokenService.CreateToken(user);
             return new UserDto
             {
                 DisplayName = user.DisplayName,
                 Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
-                Token = _tokenService.CreateToken(user),
+                Token = token.AccessToken,
+                RefreshToken = token.RefreshToken,
                 Username = user.UserName
             };
         }

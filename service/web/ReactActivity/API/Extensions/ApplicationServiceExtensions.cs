@@ -40,6 +40,13 @@ namespace API.Extensions
                 )
             );
 
+            //TODO: Add Redis cache service.
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = config.GetConnectionString("RedisConnection");
+                options.InstanceName = config.GetSection("RedisSettings:InstanceName").Get<string>();
+            });
+
             // string allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>()?[0] ?? string.Empty;
             string[] allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>() ?? new string[] {};
             string policyName = config.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;

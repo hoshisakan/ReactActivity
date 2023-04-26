@@ -1,10 +1,14 @@
 using Domain;
+using Application.RefreshTokens;
+using Application.Core;
+using API.DTOs;
 
-using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
+using MediatR;
 
 namespace API.Services
 {
@@ -12,14 +16,27 @@ namespace API.Services
     {
         private readonly IConfiguration _config;
         private readonly ILogger<TokenService> _logger;
+        private readonly IMediator _mediator;
 
-        public TokenService(IConfiguration config, ILogger<TokenService> logger)
+        public TokenService(IConfiguration config, IMediator mediator, ILogger<TokenService> logger)
         {
             _config = config;
+            _mediator = mediator;
             _logger = logger;
         }
+        
+        public string GenerateRefreshToken()
+        {
+            byte[] randomNumber = new byte[32];
+            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber) + Guid.NewGuid();
+                // return $"{Convert.ToBase64String(randomNumber)}{Guid.NewGuid()}";
+            }
+        }
 
-        public string CreateToken(AppUser user)
+        public async Task<TokenDto> CreateToken(AppUser user)
         {
             List<Claim> claims = new List<Claim>
             {
@@ -61,7 +78,25 @@ namespace API.Services
             
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
-            return tokenHandler.WriteToken(token);
+            RefreshToken refreshToken = new RefreshToken
+            {
+                AppUserId = user.Id,
+                Token = GenerateRefreshToken(),
+                JwtId = token.Id,
+                IsUsed = false,
+                IsRevoked = false,
+                ExpirationTime = DateTime.Now.AddDays(refreshTokenExpirationTime)
+            };
+
+            // Result<Unit>? result = await _mediator.Send(new Create.Command { RefreshToken = refreshToken });
+
+            _logger.LogInformation($"Refresh token created for user {user.UserName}, JwtId: {refreshToken.JwtId}, RefreshToken: {refreshToken.Token}.");
+
+            return new TokenDto
+            {
+                AccessToken = tokenHandler.WriteToken(token),
+                RefreshToken = refreshToken.Token,
+            };
         }
     }
 }

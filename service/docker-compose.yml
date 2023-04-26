@@ -1,5 +1,20 @@
 version: '3.9'
 services:
+    redis:
+        build: ./conf/redis
+        image: hoshisakan/${PROJECT_NAME}/redis:${REDIS_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_redis
+        volumes:
+            - ./data/redis:/data
+            # - ./conf/redis/setting/redis.conf:/usr/local/etc/redis/redis.conf
+        ports:
+            - ${REDIS_EXTERNAL_PORT}:${REDIS_INNER_PORT}
+        networks:
+            react-activity-network:
+              ipv4_address: ${REDIS_HOST_IP}
+        command: redis-server --appendonly ${REDIS_AOF_ENABLED} --requirepass ${REDIS_PWD}
+        restart: on-failure:3
+
     reverse_proxy:
         build:
             context: ./conf/nginx
@@ -23,8 +38,8 @@ services:
             - ./conf/nginx/conf.d:/etc/nginx/conf.d
             - ./logs/nginx:/var/log/nginx
         ports:
-            - ${NGINX_HTTP_INNER_PORT}:${NGINX_HTTP_INNER_PORT}
-            - ${NGINX_HTTPS_INNER_PORT}:${NGINX_HTTPS_INNER_PORT}
+            - ${NGINX_HTTP_EXTERNAL_PORT}:${NGINX_HTTP_INNER_PORT}
+            - ${NGINX_HTTPS_EXTERNAL_PORT}:${NGINX_HTTPS_INNER_PORT}
         depends_on:
             - db
             - backend

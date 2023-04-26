@@ -27,6 +27,7 @@ if [ "$1" = "API" ]; then
     dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 7.0.4
     dotnet add package Quartz --version 3.6.2
     dotnet add package Quartz.Extensions.Hosting --version 3.6.2
+    dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 7.0.5
 elif [ "$1" = "Persistence" ]; then
     dotnet add package Microsoft.EntityFrameworkCore --version 7.0.4
     dotnet add package Microsoft.EntityFrameworkCore.Design --version 7.0.4
