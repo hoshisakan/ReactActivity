@@ -3,6 +3,7 @@ using Application.Activities;
 using Application.Comments;
 
 using AutoMapper;
+using Application.RefreshTokens;
 
 namespace Application.Core
 {
@@ -42,6 +43,9 @@ namespace Application.Core
                 .ForMember(d => d.Date, o => o.MapFrom(s => s.Activity.Date))
                 .ForMember(d => d.HostUsername, o => o.MapFrom(s => s.Activity.Attendees
                     .FirstOrDefault(x => x.IsHost).AppUser.UserName));
+            CreateMap<RefreshToken, RefreshTokenDto>()
+                .ForMember(d => d.Token, o => o.MapFrom(s => s.Token));
+                // .ForMember(d => d.ExpiresIn, o => o.MapFrom(s => s.ExpirationTime));
 
         }
     }

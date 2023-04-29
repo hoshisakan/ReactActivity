@@ -1,5 +1,8 @@
 using API.DTOs;
 using API.Services;
+using Application.Core;
+using Application.Module;
+using Application.RefreshTokens;
 using Domain;
 
 using Microsoft.AspNetCore.Authorization;
@@ -8,19 +11,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Security.Claims;
-
+using System.Text.Json;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    public class AccountController : BaseApiController
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly TokenService _tokenService;
         private readonly IDistributedCache _cache;
         private readonly IConfiguration _config;
         private readonly ILogger<AppUser> _logger;
+
 
         public AccountController(UserManager<AppUser> userManager, TokenService tokenService,
             IDistributedCache cache, IConfiguration config, ILogger<AppUser> logger)
@@ -49,25 +53,27 @@ namespace API.Controllers
 
             if (result)
             {
-                UserDto? userDto = await CreateUserObject(user);
+                UserDto? userDto = new UserDto();
 
-                string userSetTokenCacheKey = "user";
+                CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
 
-                //TODO: Set cache, but don't expire it.
-                // await _cache.SetStringAsync(userSetTokenCacheKey, userDto.Token);
-
-                //TODO: Set cache and add expiration time.
-                await _cache.SetStringAsync(
-                    "user", userDto.Token,
-                    new DistributedCacheEntryOptions{
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
-                        // AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30)
-                    }
-                );
-
-                string decryptToken = await _cache.GetStringAsync(userSetTokenCacheKey) ?? "Empty";
-                _logger.LogInformation($"username: {user.UserName}, _cache: {decryptToken}");
-
+                if (decryptCacheTokenDto != null)
+                {
+                    _logger.LogInformation($"username: {user.UserName}, token: {decryptCacheTokenDto.Token}, expires_at: {decryptCacheTokenDto.ExpiresIn}");
+                    userDto = await CreateUserObject(user, decryptCacheTokenDto);
+                }
+                else
+                {
+                    _logger.LogInformation($"username: {user.UserName}, token: null, expires_at: null");
+                    userDto = await CreateUserObject(user, true);
+                    CacheTokenDto cacheTokenDto = new CacheTokenDto{
+                        AppUserId = user.Id,
+                        Username = user.UserName,
+                        Token = userDto.Token,
+                        ExpiresIn = userDto.ExpiresIn
+                    };
+                    await SaveTokenToCache(user.UserName, cacheTokenDto);
+                }
                 return userDto;
             }
             return Unauthorized();
@@ -124,18 +130,213 @@ namespace API.Controllers
             return await CreateUserObject(user);
         }
 
-        [HttpGet]
-        private async Task<UserDto> CreateUserObject(AppUser user)
+        [AllowAnonymous]
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<UserDto>> RefreshToken(RequestTokenDto requestTokenDto)
         {
-            TokenDto token = await _tokenService.CreateToken(user);
+            try {
+                if (requestTokenDto == null)
+                {
+                    throw new ArgumentNullException(nameof(requestTokenDto));
+                }
+
+                RefreshTokenDto refreshTokenDto = new RefreshTokenDto();
+                Result<RefreshTokenDto>? response = await Mediator.Send(
+                        new Retrieve.Query {
+                            RefreshToken = requestTokenDto.RefreshToken,
+                            Predicate = "token"
+                        }
+                    );
+                refreshTokenDto = response.Value ?? new RefreshTokenDto();
+
+                if (string.IsNullOrEmpty(refreshTokenDto.Token))
+                {
+                    return BadRequest("Invalid refresh token.");
+                }
+
+                _logger.LogInformation($"Retrieve refresh token: {refreshTokenDto.Token}");
+                _logger.LogInformation($"Request refresh token: {requestTokenDto.RefreshToken}");
+                _logger.LogInformation($"Retrieve refresh token expires time: {refreshTokenDto.ExpirationTime}");
+
+                if (DateTimeTool.CompareBothOfTime(DateTime.Now, refreshTokenDto.ExpirationTime) > 0)
+                {
+                    return BadRequest("Refresh token has been expired, please re-login.");
+                }
+
+                AppUser? user = await _userManager.Users.Include(p => p.Photos)
+                    .FirstOrDefaultAsync(x => x.Id == refreshTokenDto.AppUserId);
+
+                if (user == null)
+                {
+                    return BadRequest("Refresh token can't be reference to any user.");
+                }
+                _logger.LogInformation($"Current request refresh token user: {user.UserName}");
+
+                CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
+
+                if (decryptCacheTokenDto != null && decryptCacheTokenDto.Token == requestTokenDto.Token)
+                {
+                    DateTime expiresAt = DateTimeTool.UnixTimeStampToDateTime(decryptCacheTokenDto.ExpiresIn);
+                    if (DateTimeTool.CompareBothOfTime(DateTime.Now, expiresAt) < 0)
+                    {
+                        return BadRequest("Token not yet expired.");
+                    }
+                }
+
+                UserDto userDto = await CreateUserObject(user);
+                
+                _logger.LogInformation($"Current token owner: {userDto.Username}");
+                _logger.LogInformation($"New access token: {userDto.Token}");
+                _logger.LogInformation($"New access token expires time: {userDto.ExpiresIn}");
+                _logger.LogInformation($"Current refresh token: {userDto.RefreshToken}");
+
+                CacheTokenDto cacheTokenDto = new CacheTokenDto{
+                    AppUserId = user.Id,
+                    Username = user.UserName,
+                    Token = userDto.Token,
+                    ExpiresIn = userDto.ExpiresIn
+                };
+                await SaveTokenToCache(user.UserName, cacheTokenDto);
+
+                userDto.RefreshToken = refreshTokenDto.Token;
+
+                await Mediator.Send(
+                    new UpdateUsedState.Command {
+                        AppUserId = user.Id,
+                        Token = refreshTokenDto.Token
+                    }
+                );
+
+                return userDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("revoke/{username}")]
+        public async Task<IActionResult> Revoke(string username)
+        {
+            AppUser? user = await _userManager.FindByNameAsync(username);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid username.");
+            }
+            _logger.LogInformation($"Username: {username}, AppUserId: {user.Id}.");
+            return HandleResult(await Mediator.Send(new Revoke.Command { AppUserId = user.Id }));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verity-token")]
+        public IActionResult VerifyToken(VerityTokenDto verityTokenDto)
+        {
+            if (string.IsNullOrEmpty(verityTokenDto.Token))
+            {
+                return BadRequest("Verify token is required");
+            }
+            _logger.LogInformation($"Verify token is: {verityTokenDto.Token}");
+            bool validateResult = _tokenService.VerifyToken(verityTokenDto.Token);
+            if (validateResult)
+            {
+                return Ok();
+            }
+            return BadRequest("Invalid token.");
+        }
+
+        private async Task<UserDto> CreateUserObject(AppUser user, bool reset = false)
+        {
+            TokenDto token = await _tokenService.CreateToken(user, reset);
+
             return new UserDto
             {
                 DisplayName = user.DisplayName,
                 Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 Token = token.AccessToken,
                 RefreshToken = token.RefreshToken,
+                ExpiresIn = token.ExpiresIn,
                 Username = user.UserName
             };
         }
+
+        private async Task<UserDto> CreateUserObject(AppUser user, CacheTokenDto cacheTokenDto)
+        {
+            UserDto userDto = new UserDto(){
+                DisplayName = user.DisplayName,
+                Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                Token = cacheTokenDto.Token,
+                RefreshToken = null,
+                ExpiresIn = cacheTokenDto.ExpiresIn,
+                Username = user.UserName
+            };
+            try {
+                Result<RefreshTokenDto>? response = await Mediator.Send(
+                    new Retrieve.Query {
+                        AppUserId = user.Id,
+                        Predicate = "all"
+                    }
+                );
+                RefreshTokenDto? refreshTokenDto = new RefreshTokenDto();
+
+                if (response == null)
+                {
+                    throw new Exception("Instance of response is null.");
+                }
+                else
+                {
+                    _logger.LogInformation($"Instance of response valid.");
+                    userDto.RefreshToken = response.Value?.Token ?? throw new ArgumentNullException(nameof(response.Value));
+                    refreshTokenDto = response.Value ?? throw new ArgumentNullException(nameof(response.Value));
+                }
+            } catch (Exception ex) {
+                _logger.LogInformation($"Error: {ex.Message}");
+            }
+            return userDto;
+        }
+
+        private async Task<T> DecryptCacheItem<T>(string cacheKey)
+        {
+            string? decryptCacheToken = await _cache.GetStringAsync(cacheKey);
+            if (decryptCacheToken == null)
+            {
+                _logger.LogInformation($"Cache token is null, error key: {cacheKey}.");
+                return await Task.FromResult<T>(default(T));
+            }
+
+            T? result = JsonSerializer.Deserialize<T>(decryptCacheToken);
+
+            if (result == null)
+            {
+                _logger.LogInformation("Deserializer Cache token failed.");
+                throw new ArgumentNullException("Deserializer Cache token failed.");
+            }
+            return await Task.FromResult(result);
+        }
+
+        private async Task SaveTokenToCache(string cacheKey, CacheTokenDto cacheTokenDto)
+        {
+            int requestAccessTokenExpiresTime = _config.GetSection("JWTSettings:AccessTokenExpirationTime").Get<int?>() ?? -1;
+
+            if (requestAccessTokenExpiresTime == -1)
+            {
+                throw new Exception("Access token expires time is not set.");
+            }
+
+            string cacheTokenJson = JsonSerializer.Serialize(cacheTokenDto);
+            //TODO: Set cache, but don't limit expiration time.
+            // await _cache.SetStringAsync(cacheKey, cacheTokenJson);
+            //TODO: Set cache and add expiration time.
+            await _cache.SetStringAsync(
+                cacheKey, cacheTokenJson,
+                new DistributedCacheEntryOptions{
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(requestAccessTokenExpiresTime)
+                    // AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30)
+                }
+            );
+        }
+    
     }
 }

@@ -1,11 +1,11 @@
 using Persistence;
+using Application.Core;
 
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
-using Application.Core;
 
 namespace Application.Profiles
 {

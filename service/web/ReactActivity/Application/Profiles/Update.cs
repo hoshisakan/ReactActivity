@@ -4,7 +4,6 @@ using Application.Core;
 using Application.Interfaces;
 
 using MediatR;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
