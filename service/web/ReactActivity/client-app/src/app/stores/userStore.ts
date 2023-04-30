@@ -1,6 +1,6 @@
 import agent from '../api/agent';
 import { store } from './store';
-import { User, UserFormValues } from '../models/user';
+import { RefreshToken, User, UserFormValues } from '../models/user';
 import { router } from '../router/Routes';
 
 import { makeAutoObservable, runInAction } from 'mobx';
@@ -20,6 +20,7 @@ export default class userStore {
         try {
             const user = await agent.Account.login(requestValues);
             store.commonStore.setToken(user.token);
+            store.commonStore.setRefreshToken(user.refreshToken);
             runInAction(() => (this.user = user));
             router.navigate('/activities');
             store.modalStore.closeModal();
@@ -32,6 +33,7 @@ export default class userStore {
         try {
             const user = await agent.Account.register(requestValues);
             store.commonStore.setToken(user.token);
+            store.commonStore.setRefreshToken(user.refreshToken);
             runInAction(() => (this.user = user));
             router.navigate('/activities');
             store.modalStore.closeModal();
@@ -39,6 +41,18 @@ export default class userStore {
             throw error;
         }
     };
+
+    refreshToken = async (token: RefreshToken) => {
+        try {
+            const user = await agent.Account.refresh(token);
+            store.commonStore.setToken(user.token);
+            store.commonStore.setRefreshToken(user.refreshToken);
+            runInAction(() => (this.user = user));
+            router.navigate('/activities');
+        } catch (error) {
+            throw error;
+        }
+    }
 
     setImage = (image: string) => {
         if (this.user)
@@ -49,6 +63,8 @@ export default class userStore {
 
     logout = () => {
         store.commonStore.setToken(null);
+        store.commonStore.setRefreshToken(null);
+        store.commonStore.clearLocalStorageToken();
         this.user = null;
         router.navigate('/');
     };

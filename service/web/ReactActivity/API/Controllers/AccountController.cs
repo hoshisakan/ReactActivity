@@ -53,6 +53,7 @@ namespace API.Controllers
 
             if (result)
             {
+                _logger.LogInformation($"username: {user.UserName}");
                 UserDto? userDto = new UserDto();
 
                 CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
@@ -137,6 +138,8 @@ namespace API.Controllers
             try {
                 string accessToken = requestTokenDto.AccessToken;
                 string refreshToken = requestTokenDto.RefreshToken;
+                
+                _logger.LogInformation($"accessToken: {accessToken}, refreshToken: {refreshToken}");
 
                 ValidateTokenDto validateTokenDto = _tokenService.RecoveryToken(accessToken);
 
@@ -190,6 +193,7 @@ namespace API.Controllers
                 _logger.LogInformation($"Current request refresh token user: {user.UserName}");
 
                 UserDto userDto = await CreateUserObject(user);
+                userDto.RefreshToken = refreshTokenDto.Token;
 
                 _logger.LogInformation($"Current token owner: {userDto.Username}");
                 _logger.LogInformation($"New access token: {userDto.Token}");
@@ -203,8 +207,6 @@ namespace API.Controllers
                     ExpiresIn = userDto.ExpiresIn
                 };
                 await SaveTokenToCache(user.UserName, cacheTokenDto);
-
-                userDto.RefreshToken = refreshTokenDto.Token;
 
                 await Mediator.Send(
                     new UpdateUsedState.Command {

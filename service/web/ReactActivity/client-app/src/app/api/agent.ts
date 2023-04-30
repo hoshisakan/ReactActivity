@@ -1,5 +1,5 @@
 import { Activity, ActivityFormValues } from '../models/activity';
-import { User, UserFormValues } from '../models/user';
+import { RefreshToken, User, UserFormValues } from '../models/user';
 import { Photo, Profile, UserActivity } from '../models/profile';
 import { store } from '../stores/store';
 import { router } from '../router/Routes';
@@ -7,7 +7,6 @@ import { PaginatedResult } from '../models/pagination';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
-
 
 const sleep = (delay: number) => {
     return new Promise((resolve) => {
@@ -55,7 +54,36 @@ axios.interceptors.response.use(
                 }
                 break;
             case 401:
-                toast.error('unauthorized');
+                const baseUrl = error.config?.baseURL;
+                const currentUrl = config.url?.replace(baseUrl!, "");
+                const notAllowedRefreshTokenUrlList = ['/', '/buggy/unauthorized'];
+
+                // console.log('baseURL: ' + baseUrl);
+                // console.log('current url: ' + currentUrl);
+                
+                if (!notAllowedRefreshTokenUrlList.includes(currentUrl!))
+                {
+                    const oldAccessToken = store.commonStore.token;
+                    const refreshToken = store.commonStore.refreshToken;
+                    // console.log('oldAccessToken: ' + oldAccessToken);
+                    // console.log('refreshToken: ' + refreshToken);
+                    if (oldAccessToken && refreshToken) {
+                        const token = {
+                            accessToken: oldAccessToken,
+                            refreshToken: refreshToken,
+                        };
+                        store.userStore.refreshToken(token).catch((error) => {
+                            console.log(error);
+                            toast.error('unauthorized');
+                        });
+                    } else {
+                        toast.error('unauthorized');
+                    }
+                }
+                else
+                {
+                    toast.error('unauthorized');
+                }
                 break;
             case 403:
                 toast.error('forbidden');
@@ -82,7 +110,8 @@ const requests = {
 };
 
 const Activities = {
-    list: (params: URLSearchParams) => axios.get<PaginatedResult<Activity[]>>('/activities', { params }).then(responseBody),
+    list: (params: URLSearchParams) =>
+        axios.get<PaginatedResult<Activity[]>>('/activities', { params }).then(responseBody),
     details: (id: string) => requests.get<Activity>(`/activities/${id}`),
     create: (activity: ActivityFormValues) => requests.post<void>('/activities', activity),
     update: (activity: ActivityFormValues) => requests.put<void>(`/activities/${activity.id}`, activity),
@@ -94,6 +123,7 @@ const Account = {
     current: () => requests.get<User>('/account'),
     login: (user: UserFormValues) => requests.post<User>(`/account/login`, user),
     register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
+    refresh: (token: RefreshToken) => requests.post<User>(`/account/refresh-token`, token),
 };
 
 const Profiles = {
@@ -112,13 +142,13 @@ const Profiles = {
     listFollowings: (username: string, predicate: string) =>
         requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`),
     listActivities: (username: string, predicate: string) =>
-        requests.get<UserActivity[]>(`/profiles/${username}/activities?predicate=${predicate}`)
+        requests.get<UserActivity[]>(`/profiles/${username}/activities?predicate=${predicate}`),
 };
 
 const agent = {
     Activities,
     Account,
-    Profiles
+    Profiles,
 };
 
 export default agent;
