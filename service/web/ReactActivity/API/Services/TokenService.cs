@@ -18,12 +18,15 @@ namespace API.Services
         private readonly IConfiguration _config;
         private readonly ILogger<TokenService> _logger;
         private readonly IMediator _mediator;
+        private readonly TokenValidationParameters _tokenValidationParams;
 
-        public TokenService(IConfiguration config, IMediator mediator, ILogger<TokenService> logger)
+        public TokenService(IConfiguration config, IMediator mediator,
+            ILogger<TokenService> logger, TokenValidationParameters tokenValidationParams)
         {
             _config = config;
             _mediator = mediator;
             _logger = logger;
+            _tokenValidationParams = tokenValidationParams;
         }
     
         public async Task<TokenDto> CreateToken(AppUser user, bool reset = false)
@@ -37,12 +40,16 @@ namespace API.Services
             };
 
             string secretKey = _config.GetSection("JWTSettings:TokenKey").Value ?? string.Empty;
+            string issuer = _config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;
+            string audience = _config.GetSection("JWTSettings:Audience").Get<string>() ?? string.Empty;
             int requestAccessTokenExpiresTime = _config.GetSection("JWTSettings:AccessTokenExpirationTime").Get<int?>() ?? -1;
             int requestRefreshTokenExpiresTime = _config.GetSection("JWTSettings:RefreshTokenExpirationTime").Get<int?>() ?? -1;
 
-            if (string.IsNullOrEmpty(secretKey))
+            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer)
+                || string.IsNullOrEmpty(audience)
+            )
             {
-                throw new Exception("Secret key is not set.");
+                throw new Exception("Secret key or issuer or audience is not set.");
             }
             if (requestAccessTokenExpiresTime == -1)
             {
@@ -54,7 +61,7 @@ namespace API.Services
             }
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+            SigningCredentials creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             DateTime accessTokenExpiresTime = DateTime.Now.AddMinutes(requestAccessTokenExpiresTime);
             //TODO: For test
@@ -66,7 +73,9 @@ namespace API.Services
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = accessTokenExpiresTime,
-                SigningCredentials = creds
+                SigningCredentials = creds,
+                Issuer = issuer,
+                Audience = audience
             };
 
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
@@ -171,42 +180,107 @@ namespace API.Services
 
         public bool VerifyToken(string token)
         {
-            string secretKey = _config.GetSection("JWTSettings:TokenKey").Get<string>() ?? string.Empty;
-            
-            if (string.IsNullOrEmpty(secretKey))
-            {
-                throw new Exception("Secret key is not set.");
-            }
+            bool validatedTokenResult = false;
 
-            var validationParameters = new TokenValidationParameters()
+            try {
+                JwtSecurityTokenHandler? tokenHandler = new JwtSecurityTokenHandler();
+                ClaimsPrincipal? tokenInVerification = tokenHandler.ValidateToken(token, _tokenValidationParams, out SecurityToken securityToken);
+                validatedTokenResult = tokenInVerification != null;
+
+                _logger.LogInformation($"Validate token result: {validatedTokenResult}");
+
+                if (validatedTokenResult)
+                {
+                    string expiryDateTime = tokenInVerification.Claims.Where(c => c.Type == JwtRegisteredClaimNames.Exp).Select(c => c.Value).SingleOrDefault();
+                    string jWTId = tokenInVerification.Claims.Where(c => c.Type == JwtRegisteredClaimNames.Jti).Select(c => c.Value).SingleOrDefault();
+                    _logger.LogInformation(
+                        $"ExpiryDateTime: {expiryDateTime}, JWTId: {jWTId}"
+                    );
+                }
+            }
+            catch(SecurityTokenException se)
+            {
+                _logger.LogError(se.Message);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
+            return validatedTokenResult;
+        }
+
+        public ValidateTokenDto RecoveryToken(string token)
+        {
+            bool validatedTokenResult = false;
+            ValidateTokenDto validateTokenDto = new ValidateTokenDto();
+
+            try {
+                JwtSecurityTokenHandler? tokenHandler = new JwtSecurityTokenHandler();
+                TokenValidationParameters _noLifeTimeValidationTokenParameters = GetNoLifeTimeValidateTokenParameters();
+                ClaimsPrincipal? tokenInVerification = tokenHandler.ValidateToken(token, _noLifeTimeValidationTokenParameters, out SecurityToken securityToken);
+                validatedTokenResult = tokenInVerification != null;
+
+                _logger.LogInformation($"Validate token result: {validatedTokenResult}");
+
+                if (validatedTokenResult)
+                {
+                    validateTokenDto.JwtId = tokenInVerification.Claims.Where(c => c.Type == JwtRegisteredClaimNames.Jti).Select(c => c.Value).SingleOrDefault();
+                    string expiryUnixTimeStamp = tokenInVerification.Claims.Where(c => c.Type == JwtRegisteredClaimNames.Exp).Select(c => c.Value).SingleOrDefault();
+                    
+                    if (!string.IsNullOrEmpty(expiryUnixTimeStamp))
+                    {
+                        DateTime expiryDateTime = DateTimeTool.UnixTimeStampToDateTime(expiryUnixTimeStamp);
+                        int compareBothOfResult = DateTimeTool.CompareBothOfTime(DateTime.Now, expiryDateTime);
+                        if (compareBothOfResult > 0)
+                        {
+                            validateTokenDto.IsExpired = true;
+                        }
+                        else
+                        {
+                            validateTokenDto.IsExpired = false;
+                        }
+                        _logger.LogInformation($"expiryDateTime: {expiryDateTime}");
+                        _logger.LogInformation($"expiryUnixTimeStamp: {expiryUnixTimeStamp}");
+                    }
+                }
+                validateTokenDto.IsValid = validatedTokenResult;
+            }
+            catch(SecurityTokenException se)
+            {
+                _logger.LogError(se.Message);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
+            return validateTokenDto;
+        }
+
+        public TokenValidationParameters GetNoLifeTimeValidateTokenParameters()
+        {
+            string secretKey = _config.GetSection("JWTSettings:TokenKey").Get<string>() ?? string.Empty;
+            string issuer = _config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;
+            string audience = _config.GetSection("JWTSettings:Audience").Get<string>() ?? string.Empty;
+            
+            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer)
+                || string.IsNullOrEmpty(audience)
+            )
+            {
+                throw new Exception("Secret key or issuer or audience is not set.");
+            }
+            return new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(secretKey)
                 ),
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+                ValidateAudience = true,
+                ValidAudience = audience,
+                ValidateLifetime = false,
                 ClockSkew = TimeSpan.Zero
             };
-
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken validatedToken = null;
-
-            try
-            {
-                tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-            }
-            catch(SecurityTokenException)
-            {
-                return false; 
-            }
-            catch(Exception e)
-            {
-                _logger.LogError(e.Message);
-                throw;
-            }
-            return validatedToken != null;
         }
     }
 }

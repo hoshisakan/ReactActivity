@@ -8,6 +8,8 @@ namespace Application.RefreshTokens
         public DateTime ExpirationTime { get; set; }
 
         [JsonIgnore]
+        public string JwtId { get; set; }
+        [JsonIgnore]
         public bool IsRevoked { get; set; }
         [JsonIgnore]
         public string AppUserId { get; set; }

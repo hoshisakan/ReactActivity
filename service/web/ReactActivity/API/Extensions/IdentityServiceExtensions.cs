@@ -28,26 +28,39 @@ namespace API.Extensions
             .AddEntityFrameworkStores<DataContext>();
 
             string secretKey = config["JWTSettings:TokenKey"] ?? string.Empty;
-            
-            if (string.IsNullOrEmpty(secretKey))
+            string issuer = config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;
+            string audience = config.GetSection("JWTSettings:Audience").Get<string>() ?? string.Empty;
+
+            if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer)
+                || string.IsNullOrEmpty(audience)
+            )
             {
-                throw new Exception("Secret key is not set.");
+                throw new Exception("Secret key or issuer or audience is not set.");
             }
+
+            TokenValidationParameters tokenValidationParams = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(secretKey)
+                ),
+                // ValidateIssuer = false,
+                // ValidateAudience = false,
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+                ValidateAudience = true,
+                ValidAudience = audience,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            services.AddSingleton(tokenValidationParams);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opt =>
                 {
-                    opt.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(secretKey)
-                        ),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero
-                    };
+                    opt.SaveToken = true;
+                    opt.TokenValidationParameters = tokenValidationParams;
                     opt.Events = new JwtBearerEvents
                     {
                         OnMessageReceived = context =>

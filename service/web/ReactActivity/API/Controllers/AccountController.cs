@@ -135,18 +135,35 @@ namespace API.Controllers
         public async Task<ActionResult<UserDto>> RefreshToken(RequestTokenDto requestTokenDto)
         {
             try {
-                if (requestTokenDto == null)
+                string accessToken = requestTokenDto.AccessToken;
+                string refreshToken = requestTokenDto.RefreshToken;
+
+                ValidateTokenDto validateTokenDto = _tokenService.RecoveryToken(accessToken);
+
+                string JwtId = validateTokenDto.JwtId;
+                bool IsValid = validateTokenDto.IsValid;
+                bool IsExpired = validateTokenDto.IsExpired;
+
+                if (!IsValid)
                 {
-                    throw new ArgumentNullException(nameof(requestTokenDto));
+                    return BadRequest("Invalid access token");
                 }
+
+                if (IsValid && !IsExpired)
+                {
+                    return BadRequest("Token has not yet expired");
+                }
+
+                _logger.LogInformation($"Old access token validation pass, JwtId: {JwtId}");
 
                 RefreshTokenDto refreshTokenDto = new RefreshTokenDto();
                 Result<RefreshTokenDto>? response = await Mediator.Send(
-                        new Retrieve.Query {
-                            RefreshToken = requestTokenDto.RefreshToken,
-                            Predicate = "token"
-                        }
-                    );
+                    new Retrieve.Query {
+                        RefreshToken = requestTokenDto.RefreshToken,
+                        Predicate = "token"
+                    }
+                );
+
                 refreshTokenDto = response.Value ?? new RefreshTokenDto();
 
                 if (string.IsNullOrEmpty(refreshTokenDto.Token))
@@ -172,19 +189,8 @@ namespace API.Controllers
                 }
                 _logger.LogInformation($"Current request refresh token user: {user.UserName}");
 
-                CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
-
-                if (decryptCacheTokenDto != null && decryptCacheTokenDto.Token == requestTokenDto.Token)
-                {
-                    DateTime expiresAt = DateTimeTool.UnixTimeStampToDateTime(decryptCacheTokenDto.ExpiresIn);
-                    if (DateTimeTool.CompareBothOfTime(DateTime.Now, expiresAt) < 0)
-                    {
-                        return BadRequest("Token not yet expired.");
-                    }
-                }
-
                 UserDto userDto = await CreateUserObject(user);
-                
+
                 _logger.LogInformation($"Current token owner: {userDto.Username}");
                 _logger.LogInformation($"New access token: {userDto.Token}");
                 _logger.LogInformation($"New access token expires time: {userDto.ExpiresIn}");
@@ -207,7 +213,7 @@ namespace API.Controllers
                     }
                 );
 
-                return userDto;
+                return Ok(userDto);
             }
             catch (Exception ex)
             {
@@ -234,17 +240,16 @@ namespace API.Controllers
         [HttpPost("verity-token")]
         public IActionResult VerifyToken(VerityTokenDto verityTokenDto)
         {
-            if (string.IsNullOrEmpty(verityTokenDto.Token))
-            {
-                return BadRequest("Verify token is required");
-            }
-            _logger.LogInformation($"Verify token is: {verityTokenDto.Token}");
-            bool validateResult = _tokenService.VerifyToken(verityTokenDto.Token);
+            string accessToken = verityTokenDto.AccessToken;
+            _logger.LogInformation($"Verify token is: {accessToken}");
+
+            bool validateResult = _tokenService.VerifyToken(accessToken);
+
             if (validateResult)
             {
                 return Ok();
             }
-            return BadRequest("Invalid token.");
+            return BadRequest("Invalid access token.");
         }
 
         private async Task<UserDto> CreateUserObject(AppUser user, bool reset = false)
@@ -333,7 +338,7 @@ namespace API.Controllers
                 cacheKey, cacheTokenJson,
                 new DistributedCacheEntryOptions{
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(requestAccessTokenExpiresTime)
-                    // AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(30)
+                    // AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(requestAccessTokenExpiresTime)
                 }
             );
         }

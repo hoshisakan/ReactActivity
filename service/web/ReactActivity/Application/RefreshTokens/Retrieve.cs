@@ -15,6 +15,7 @@ namespace Application.RefreshTokens
         {
             public string? AppUserId { get; set; }
             public string? RefreshToken { get; set; }
+            public string? JwtId { get; set; }
             public string Predicate { get; set; }
         }
 
@@ -47,6 +48,7 @@ namespace Application.RefreshTokens
                 query = request.Predicate switch
                 {
                     "token" => query.Where(a => a.Token == request.RefreshToken),
+                    "jwtId" => query.Where(a => a.JwtId == request.JwtId),
                     _ => query.Where(a => a.AppUserId == request.AppUserId)
                 };
 

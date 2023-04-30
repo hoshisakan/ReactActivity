@@ -47,11 +47,9 @@ namespace API.Extensions
                 options.InstanceName = config.GetSection("RedisSettings:InstanceName").Get<string>();
             });
 
-            // string allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>()?[0] ?? string.Empty;
             string[] allowCorsOrigin = config.GetSection("CorsSettings:Origins").Get<string[]>() ?? new string[] {};
             string policyName = config.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;
 
-            // if (!string.IsNullOrEmpty(allowCorsOrigin) && !string.IsNullOrEmpty(policyName))
             if (allowCorsOrigin.Length > 0 && !allowCorsOrigin.Any(a => String.IsNullOrEmpty(a)) && !string.IsNullOrEmpty(policyName))
             {
                 services.AddCors(options =>
