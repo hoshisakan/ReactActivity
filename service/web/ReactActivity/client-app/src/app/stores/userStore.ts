@@ -46,8 +46,8 @@ export default class userStore {
         try {
             const user = await agent.Account.refresh(token);
             store.commonStore.setToken(user.token);
-            store.commonStore.setRefreshToken(user.refreshToken);
             runInAction(() => (this.user = user));
+            store.activityStore.loadActivities();
             router.navigate('/activities');
         } catch (error) {
             throw error;

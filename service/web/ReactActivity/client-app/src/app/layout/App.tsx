@@ -19,6 +19,7 @@ function App() {
         if (commonStore.token) {
             userStore.getUser().finally(() => commonStore.setAppLoaded())
         }
+        //TODO: User not logged in
         else {
             commonStore.setAppLoaded();
         }
@@ -26,7 +27,7 @@ function App() {
 
     if (!commonStore.appLoaded)
     {
-        return <LoadingComponent content='Loading app...' />
+        return <LoadingComponent content='Loading app1...' />
     }
 
     return (
