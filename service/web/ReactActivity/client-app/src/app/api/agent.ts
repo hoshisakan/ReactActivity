@@ -1,5 +1,5 @@
 import { Activity, ActivityFormValues } from '../models/activity';
-import { RefreshToken, User, UserFormValues } from '../models/user';
+import { User, UserFormValues } from '../models/user';
 import { Photo, Profile, UserActivity } from '../models/profile';
 import { store } from '../stores/store';
 import { router } from '../router/Routes';
@@ -15,6 +15,7 @@ const sleep = (delay: number) => {
 };
 
 axios.defaults.baseURL = process.env.REACT_APP_API_URL;
+axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use((config) => {
     const token = store.commonStore.token;
@@ -35,7 +36,7 @@ axios.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
-        const { data, status, config } = error.response as AxiosResponse;
+        const { data, status, config, headers } = error.response as AxiosResponse;
         switch (status) {
             case 400:
                 if (config.method === 'get' && data.errors !== undefined && data.errors.hasOwnProperty('id')) {
@@ -54,35 +55,11 @@ axios.interceptors.response.use(
                 }
                 break;
             case 401:
-                const baseUrl = error.config?.baseURL;
-                const currentUrl = config.url?.replace(baseUrl!, "");
-                const notAllowedRefreshTokenUrlList = ['/', '/buggy/unauthorized'];
-
-                // console.log('baseURL: ' + baseUrl);
-                // console.log('current url: ' + currentUrl);
-                
-                if (!notAllowedRefreshTokenUrlList.includes(currentUrl!))
+                //TODO: Check if the error is invalid_token and then logout.
+                if (status === 401 && headers['www-authenticate']?.startsWith('Bearer error="invalid_token"'))
                 {
-                    const oldAccessToken = store.commonStore.token;
-                    const refreshToken = store.commonStore.refreshToken;
-                    // console.log('oldAccessToken: ' + oldAccessToken);
-                    // console.log('refreshToken: ' + refreshToken);
-                    if (oldAccessToken && refreshToken) {
-                        const token = {
-                            accessToken: oldAccessToken,
-                            refreshToken: refreshToken,
-                        };
-                        store.userStore.refreshToken(token).catch((error) => {
-                            console.log(error);
-                            toast.error('unauthorized');
-                        });
-                    } else {
-                        toast.error('unauthorized');
-                    }
-                }
-                else
-                {
-                    toast.error('unauthorized');
+                    store.userStore.logout();
+                    toast.error('Session expired - please login again');
                 }
                 break;
             case 403:
@@ -123,7 +100,9 @@ const Account = {
     current: () => requests.get<User>('/account'),
     login: (user: UserFormValues) => requests.post<User>(`/account/login`, user),
     register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
-    refresh: (token: RefreshToken) => requests.post<User>(`/account/refresh-token`, token),
+    fbLogin: (accessToken: string) => requests
+        .post<User>(`/account/fbLogin?accessToken=${accessToken}`, {}),
+    refreshToken: () => requests.post<User>('/account/refresh-token', {})
 };
 
 const Profiles = {

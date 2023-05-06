@@ -13,4 +13,6 @@ export const categoryOptions = [
     { text: 'Food', value: 'food' },
     { text: 'Music', value: 'music' },
     { text: 'Travel', value: 'travel' },
+    { text: 'Sport', value: 'sport' },
+    { text: 'Fitness', value: 'fitness' },
 ];

@@ -5,6 +5,5 @@ namespace API.DTOs
         public string AppUserId { get; set; }
         public string Username { get; set; }
         public string Token { get; set; }
-        public string ExpiresIn { get; set; }
     }
 }

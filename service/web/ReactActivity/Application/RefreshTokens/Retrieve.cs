@@ -5,7 +5,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Microsoft.EntityFrameworkCore; //TODO: must import, otherwise can't be to use async method.
+using Microsoft.EntityFrameworkCore;
+
 
 namespace Application.RefreshTokens
 {
@@ -14,8 +15,7 @@ namespace Application.RefreshTokens
         public class Query : IRequest<Result<RefreshTokenDto>>
         {
             public string? AppUserId { get; set; }
-            public string? RefreshToken { get; set; }
-            public string? JwtId { get; set; }
+            public string? Token { get; set; }
             public string Predicate { get; set; }
         }
 
@@ -35,21 +35,17 @@ namespace Application.RefreshTokens
             public async Task<Result<RefreshTokenDto>> Handle(Query request, CancellationToken cancellationToken)
             {
                 IQueryable<RefreshTokenDto>? query = _context.RefreshTokens
-                    .Where(
-                        x => x.IsRevoked == false
-                        // && x.IsUsed == true
-                    )
                     .ProjectTo<RefreshTokenDto>(_mapper.ConfigurationProvider)
                     .AsQueryable();
 
-                _logger.LogInformation($"request.RefreshToken: {request.RefreshToken}");
+                _logger.LogInformation($"request.Token: {request.Token}");
                 _logger.LogInformation($"request.Predicate: {request.Predicate}");
 
                 query = request.Predicate switch
                 {
-                    "token" => query.Where(a => a.Token == request.RefreshToken),
-                    "jwtId" => query.Where(a => a.JwtId == request.JwtId),
-                    _ => query.Where(a => a.AppUserId == request.AppUserId)
+                    "token" => query.Where(a => a.Token == request.Token),
+                    "appUserId" => query.Where(a => a.AppUserId == request.AppUserId),
+                    _ => query.Where(a => a.AppUserId == request.AppUserId && a.Token == request.Token)
                 };
 
                 RefreshTokenDto? refreshTokenDto = await query.FirstOrDefaultAsync();

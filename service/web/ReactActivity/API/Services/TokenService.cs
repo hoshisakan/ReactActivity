@@ -10,26 +10,33 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
+
 
 namespace API.Services
 {
     public class TokenService
     {
         private readonly IConfiguration _config;
+        private readonly IDistributedCache _cache;
+
         private readonly ILogger<TokenService> _logger;
         private readonly IMediator _mediator;
         private readonly TokenValidationParameters _tokenValidationParams;
 
-        public TokenService(IConfiguration config, IMediator mediator,
-            ILogger<TokenService> logger, TokenValidationParameters tokenValidationParams)
+        public TokenService(IConfiguration config, IDistributedCache cache,
+            IMediator mediator, ILogger<TokenService> logger,
+            TokenValidationParameters tokenValidationParams
+        )
         {
             _config = config;
+            _cache = cache;
             _mediator = mediator;
             _logger = logger;
             _tokenValidationParams = tokenValidationParams;
         }
-    
-        public async Task<TokenDto> CreateToken(AppUser user, bool reset = false)
+
+        public string CreateToken(AppUser user)
         {
             List<Claim> claims = new List<Claim>
             {
@@ -42,8 +49,7 @@ namespace API.Services
             string secretKey = _config.GetSection("JWTSettings:TokenKey").Value ?? string.Empty;
             string issuer = _config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;
             string audience = _config.GetSection("JWTSettings:Audience").Get<string>() ?? string.Empty;
-            int requestAccessTokenExpiresTime = _config.GetSection("JWTSettings:AccessTokenExpirationTime").Get<int?>() ?? -1;
-            int requestRefreshTokenExpiresTime = _config.GetSection("JWTSettings:RefreshTokenExpirationTime").Get<int?>() ?? -1;
+            int requestAccessTokenExpiresTime = _config.GetSection("JWTSettings:AccessTokenExpiresTime").Get<int?>() ?? -1;
 
             if (string.IsNullOrEmpty(secretKey) || string.IsNullOrEmpty(issuer)
                 || string.IsNullOrEmpty(audience)
@@ -54,10 +60,6 @@ namespace API.Services
             if (requestAccessTokenExpiresTime == -1)
             {
                 throw new Exception("Access token expires time is not set.");
-            }
-            if (requestRefreshTokenExpiresTime == -1)
-            {
-                throw new Exception("Refresh token expires time is not set.");
             }
 
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -81,89 +83,19 @@ namespace API.Services
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
-            string refreshToken = string.Empty;
-            DateTime refreshTokenExpiresTime = DateTime.Now.AddDays(requestRefreshTokenExpiresTime);;
-            //TODO: For test
-            // DateTime refreshTokenExpiresTime = DateTime.Now.AddMinutes(requestRefreshTokenExpiresTime);;
-
-            if (reset)
-            {
-                Result<List<RefreshTokenDto>>? allRefreshTokenDtoFromDb = await _mediator.Send(
-                    new List.Query {
-                        AppUserId = user.Id,
-                        Predicate = "all"
-                    }
-                );
-
-                List<RefreshTokenDto> refreshTokenDtoList = allRefreshTokenDtoFromDb.Value ?? new List<RefreshTokenDto>();
-
-                if (refreshTokenDtoList.Count > 0)
-                {
-                    Result<RefreshTokenDto>? refreshTokenDtoFromDb = await _mediator.Send(
-                        new Retrieve.Query {
-                            AppUserId = user.Id,
-                            Predicate = ""
-                        }
-                    );
-                    RefreshTokenDto? refreshTokenDto = refreshTokenDtoFromDb.Value ?? new RefreshTokenDto();
-
-                    if (!string.IsNullOrEmpty(refreshTokenDto.Token))
-                    {
-                        bool IsExpired = ValidateTokenEffective(refreshTokenDto.ExpirationTime);
-                        if (IsExpired)
-                        {
-                            await _mediator.Send(new Revoke.Command { AppUserId = user.Id });
-                            refreshToken = GenerateRefreshToken();
-                            await SaveRefreshTokenToDB(user.Id, token.Id, refreshToken, refreshTokenExpiresTime);
-                        }
-                        else
-                        {
-                            refreshToken = refreshTokenDto.Token;
-                        }
-                    }
-                }
-                else
-                {
-                    refreshToken = GenerateRefreshToken();
-                    await SaveRefreshTokenToDB(user.Id, token.Id, refreshToken, refreshTokenExpiresTime);
-                }
-            }
-
-            _logger.LogInformation($"Refresh token created for user {user.UserName}, JwtId: {token.Id}, RefreshToken: {refreshToken}.");
-
-            return new TokenDto
-            {
-                AccessToken = tokenHandler.WriteToken(token),
-                RefreshToken = refreshToken,
-                ExpiresIn = accessTokenExpiresUnixTime
-            };
+            return tokenHandler.WriteToken(token);
         }
 
-        public string GenerateRefreshToken()
+        public RefreshToken GenerateRefreshToken()
         {
             byte[] randomNumber = new byte[32];
             using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);
-                return Convert.ToBase64String(randomNumber) + Guid.NewGuid();
-                // return $"{Convert.ToBase64String(randomNumber)}{Guid.NewGuid()}";
+                return new RefreshToken{
+                    Token = Convert.ToBase64String(randomNumber) + Guid.NewGuid()
+                };
             }
-        }
-
-        public async Task SaveRefreshTokenToDB(
-            string userId, string jwtId, string refreshToken, DateTime refreshTokenExpiresTime
-        )
-        {
-            RefreshToken generatedRefreshToken = new RefreshToken
-            {
-                AppUserId = userId,
-                Token = refreshToken,
-                JwtId = jwtId,
-                IsUsed = false,
-                IsRevoked = false,
-                ExpirationTime = refreshTokenExpiresTime
-            };
-            await _mediator.Send(new Create.Command { RefreshToken = generatedRefreshToken });
         }
 
         public bool ValidateTokenEffective(DateTime expiresTime)

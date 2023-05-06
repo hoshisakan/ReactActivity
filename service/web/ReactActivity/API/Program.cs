@@ -7,6 +7,7 @@ using Serilog;
 using Serilog.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()

@@ -11,6 +11,9 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace API.Extensions
@@ -25,7 +28,8 @@ namespace API.Extensions
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<DataContext>();
+            .AddEntityFrameworkStores<DataContext>()
+            .AddSignInManager<SignInManager<AppUser>>();
 
             string secretKey = config["JWTSettings:TokenKey"] ?? string.Empty;
             string issuer = config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;
@@ -38,12 +42,12 @@ namespace API.Extensions
                 throw new Exception("Secret key or issuer or audience is not set.");
             }
 
+            SymmetricSecurityKey encodedSecretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+
             TokenValidationParameters tokenValidationParams = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(secretKey)
-                ),
+                IssuerSigningKey = encodedSecretKey,
                 // ValidateIssuer = false,
                 // ValidateAudience = false,
                 ValidateIssuer = true,
@@ -55,6 +59,8 @@ namespace API.Extensions
             };
 
             services.AddSingleton(tokenValidationParams);
+
+            services.AddDistributedMemoryCache();
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opt =>
@@ -77,6 +83,12 @@ namespace API.Extensions
                         }
                     };
                 });
+
+            // services.Configure<CookiePolicyOptions>(options =>
+            // {
+            //     options.CheckConsentNeeded = context => true;
+            //     options.MinimumSameSitePolicy = SameSiteMode.None;
+            // });
 
             //TODO: Add Data Protection for encrypting and decrypting data.
             services.AddDataProtection().UseCryptographicAlgorithms(
