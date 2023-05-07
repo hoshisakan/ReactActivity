@@ -1,8 +1,10 @@
 using API.DTOs;
 using API.Services;
+using Application.Core;
 using Application.RefreshTokens;
 using Domain;
 
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -95,37 +97,44 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
-            if (await _userManager.Users.AnyAsync(u => u.Email == registerDto.Email))
-            {
-                ModelState.AddModelError("email", "Email is already taken.");
-                return ValidationProblem();
+            try {
+                if (await _userManager.Users.AnyAsync(u => u.Email == registerDto.Email))
+                {
+                    ModelState.AddModelError("email", "Email is already taken.");
+                    return ValidationProblem();
+                }
+
+                if (await _userManager.Users.AnyAsync(u => u.UserName == registerDto.Username))
+                {
+                    ModelState.AddModelError("username", "Username is already taken.");
+                    return ValidationProblem();
+                }
+
+                AppUser user = new AppUser
+                {
+                    DisplayName = registerDto.DisplayName,
+                    Email = registerDto.Email,
+                    UserName = registerDto.Username
+                };
+
+                _logger.LogInformation(
+                    "User: " + user.DisplayName + " " + user.Email + " " + user.UserName
+                );
+
+                IdentityResult? result = await _userManager.CreateAsync(user, registerDto.Password);
+
+                if (result.Succeeded)
+                {
+                    await SetRefreshToken(user);
+                    return await CreateUserObject(user);
+                }
+                return BadRequest(result.Errors);
             }
-
-            if (await _userManager.Users.AnyAsync(u => u.UserName == registerDto.Username))
+            catch (Exception ex)
             {
-                ModelState.AddModelError("username", "Username is already taken.");
-                return ValidationProblem();
+                _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
+                return BadRequest(ex.Message);
             }
-
-            AppUser user = new AppUser
-            {
-                DisplayName = registerDto.DisplayName,
-                Email = registerDto.Email,
-                UserName = registerDto.Username
-            };
-
-            _logger.LogInformation(
-                "User: " + user.DisplayName + " " + user.Email + " " + user.UserName
-            );
-
-            IdentityResult? result = await _userManager.CreateAsync(user, registerDto.Password);
-
-            if (result.Succeeded)
-            {
-                await SetRefreshToken(user);
-                return await CreateUserObject(user);
-            }
-            return BadRequest(result.Errors);
         }
 
         [Authorize]
@@ -193,10 +202,63 @@ namespace API.Controllers
             {
                 return BadRequest("Problem creating user account.");
             }
-
             await SetRefreshToken(user);
 
             return await CreateUserObject(user);
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<ActionResult<LogoutDto>> Logout()
+        {
+            LogoutDto logoutDto = new LogoutDto();
+            try
+            {
+                string? refreshToken = Request.Cookies["refreshToken"];
+
+                if (string.IsNullOrEmpty(refreshToken))
+                {
+                    return BadRequest("Refresh token is missing.");
+                }
+
+                AppUser? user = await _userManager.Users
+                    .Include(r => r.RefreshTokens)
+                    .FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name));
+
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+
+                await _cache.RemoveAsync(user.UserName);
+
+                Result<Unit>? revokedResult = await Mediator.Send(
+                    new Revoke.Command {
+                        AppUserId = user.Id,
+                        Token = refreshToken
+                    }
+                );
+
+                Response.Cookies.Delete("refreshToken");
+
+                logoutDto = new LogoutDto
+                {
+                    Message = "Logout successfully",
+                    IsLogout = true,
+                    Error = string.Empty
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
+                logoutDto = new LogoutDto
+                {
+                    Message = "Logout failed",
+                    IsLogout = false,
+                    Error = ex.Message
+                };
+            }
+            return logoutDto;
         }
 
         [Authorize]
@@ -270,26 +332,113 @@ namespace API.Controllers
             return BadRequest("Invalid access token.");
         }
 
+        [AllowAnonymous]
+        [HttpPost("revoke-token/{username}")]
+        public async Task<IActionResult> RevokeRefreshToken(string username)
+        {
+            try
+            {
+                string? refreshToken = Request.Cookies["refreshToken"];
+                _logger.LogInformation($"Revoke token is: {refreshToken}");
+
+                if (string.IsNullOrEmpty(refreshToken))
+                {
+                    return BadRequest("Invalid refresh token.");
+                }
+
+                _logger.LogInformation($"Revoke token request user is: {username}");
+
+                AppUser? user = _userManager.Users
+                    .Include(r => r.RefreshTokens)
+                    .FirstOrDefault(x => x.UserName == username)
+                ;
+
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation($"Will starting user id: {user.Id} remove refresh token: {refreshToken}");
+
+                Result<Unit>? revokedResult = await Mediator.Send(
+                    new Revoke.Command {
+                        AppUserId = user.Id,
+                        Token = refreshToken
+                    }
+                );
+                return HandleResult(revokedResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
+                return BadRequest(ex.Message);
+            }
+        }
+
         private async Task<UserDto> CreateUserObject(AppUser user, bool cacheExistsToken = false)
         {
             string token = string.Empty;
+            UserDto userDto = new UserDto();
 
             if (cacheExistsToken)
             {
-                token = await _cache.GetStringAsync(user.UserName);
+                string? cacheTokenJson = await _cache.GetStringAsync(user.UserName);
+                if (string.IsNullOrEmpty(cacheTokenJson))
+                {
+                    _logger.LogInformation($"Cache token is null, error key: {user.UserName}.");
+                    token = _tokenService.CreateToken(user);
+                }
+                else
+                {
+                    CacheTokenDto? cacheTokenDto = JsonSerializer.Deserialize<CacheTokenDto>(cacheTokenJson);
+                    if (cacheTokenDto == null)
+                    {
+                        _logger.LogInformation("Deserializer Cache token failed.");
+                        throw new ArgumentNullException("Deserializer Cache token failed.");
+                    }
+                    token = cacheTokenDto.Token;
+                }
+                userDto = new UserDto
+                {
+                    DisplayName = user.DisplayName,
+                    Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                    Token = token,
+                    Username = user.UserName
+                };
             }
             else
             {
                 token = _tokenService.CreateToken(user);
-            }
+                _logger.LogInformation($"User: {user.UserName}, displayName: {user.DisplayName}, create token: {token}");
 
-            return new UserDto
-            {
-                DisplayName = user.DisplayName,
-                Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
-                Token = token,
-                Username = user.UserName
-            };
+                Photo? userMainPhoto = user.Photos?.Where(x => x.IsMain).FirstOrDefault();
+
+                if (userMainPhoto == null)
+                {
+                    _logger.LogInformation($"User: {user.UserName}, displayName: {user.DisplayName}, main photo is null.");
+                    return new UserDto
+                    {
+                        DisplayName = user.DisplayName,
+                        Image = null,
+                        Token = token,
+                        Username = user.UserName
+                    };
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        $"User: {user.UserName}, displayName: {user.DisplayName}, main photo url: {userMainPhoto.Url}."
+                    );
+                    return new UserDto
+                    {
+                        DisplayName = user.DisplayName,
+                        Image = userMainPhoto.Url,
+                        Token = token,
+                        Username = user.UserName
+                    };
+                }
+            }
+            return userDto;
         }
 
         private async Task<T> DecryptCacheItem<T>(string cacheKey)
@@ -320,7 +469,7 @@ namespace API.Controllers
                 throw new Exception("Access token expires time is not set.");
             }
 
-            string cacheTokenJson = JsonSerializer.Serialize(cacheTokenDto);
+            string cacheTokenJson = JsonSerializer.Serialize<CacheTokenDto>(cacheTokenDto);
             //TODO: Set cache and add expiration time.
             await _cache.SetStringAsync(
                 cacheKey, cacheTokenJson,
@@ -362,23 +511,11 @@ namespace API.Controllers
 
                     _logger.LogInformation($"Refresh token is not null.");
                     _logger.LogInformation($"Refresh token: {refreshTokenDto.Token}");
-                    _logger.LogInformation($"Refresh IsActive: {refreshTokenDto.IsActive}");
-                    _logger.LogInformation($"Refresh IsExpired: {refreshTokenDto.IsExpired}");
-
-                    if (refreshTokenDto.IsActive == false)
-                    {
-                        _logger.LogInformation($"Refresh token is not active.");
-                        return await Task.FromResult(false);
-                    }
-
-                    if (refreshTokenDto.IsExpired == true)
-                    {
-                        _logger.LogInformation($"Refresh token is expired.");
-                        return await Task.FromResult(false);
-                    }
+                    
                     return await Task.FromResult(true);
                 }
-            } catch (Exception ex) {
+            } catch (Exception ex)
+            {
                 _logger.LogInformation($"Error: {ex.Message}\nStackTrace: {ex.StackTrace}");
                 return await Task.FromResult(false);
             }
@@ -409,11 +546,12 @@ namespace API.Controllers
                 Path = "/",
                 HttpOnly = true,
                 IsEssential = true,
-                Expires = DateTime.UtcNow.AddDays(7)
+                Expires = DateTime.UtcNow.AddDays(requestRefreshTokenExpiresTime)
             };
             Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOptions);
             string? sessionRefreshToken = Request.Cookies["refreshToken"];
             _logger.LogInformation($"Session refresh token: {sessionRefreshToken}");
+            return;
         }
     }
 }

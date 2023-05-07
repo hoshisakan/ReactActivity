@@ -10,11 +10,6 @@ import FacebookLogin from '@greatsumini/react-facebook-login';
 export default observer(function HomePage() {
     const { userStore, modalStore } = useStore();
 
-    const testReadEnvironmentVariable = () => {
-        console.log("REACT_APP_FACEBOOK_APP_ID", process.env.REACT_APP_FACEBOOK_APP_ID);
-        console.log("REACT_APP_API_URL", process.env.REACT_APP_API_URL);
-    }
-
     return (
         <Segment inverted textAlign="center" vertical className="masthead">
             <Container text>
@@ -24,7 +19,6 @@ export default observer(function HomePage() {
                 </Header>
                 {userStore.isLoggedIn ? (
                     <>
-                        {/* <Header as="h2" inverted content="Welcome to Reactivities" /> */}
                         <Header as="h2" inverted>
                             Welcome back {userStore.user?.displayName}
                         </Header>
@@ -59,11 +53,6 @@ export default observer(function HomePage() {
                                 console.log('Login fail', error);
                             }}
                         />
-                        <Button
-                            onClick={testReadEnvironmentVariable}
-                        >
-                            Test Read Environment Variable
-                        </Button>
                     </>
                 )}
             </Container>

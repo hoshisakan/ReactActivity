@@ -7,6 +7,7 @@ import { PaginatedResult } from '../models/pagination';
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
+import { Logout } from '../models/logout';
 
 const sleep = (delay: number) => {
     return new Promise((resolve) => {
@@ -102,7 +103,8 @@ const Account = {
     register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
     fbLogin: (accessToken: string) => requests
         .post<User>(`/account/fbLogin?accessToken=${accessToken}`, {}),
-    refreshToken: () => requests.post<User>('/account/refresh-token', {})
+    refreshToken: () => requests.post<User>('/account/refresh-token', {}),
+    logout: () => requests.post<Logout>('/account/logout', {}),
 };
 
 const Profiles = {

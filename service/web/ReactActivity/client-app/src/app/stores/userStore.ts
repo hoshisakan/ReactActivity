@@ -9,6 +9,7 @@ export default class userStore {
     user: User | null = null;
     fbLoading = false;
     refreshTokenTimeout: any;
+    allowLogout = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -50,11 +51,28 @@ export default class userStore {
         }
     };
 
-    logout = () => {
-        store.commonStore.setToken(null);
-        window.localStorage.removeItem('access_token');
-        this.user = null;
-        router.navigate('/');
+    logout = async () => {
+        try {
+            const response = await agent.Account.logout();
+
+            runInAction(() => {
+                if (response.isLogout) {
+                    this.allowLogout = true;
+                    this.user = null;
+                    store.commonStore.setToken(null);
+                    window.localStorage.removeItem('access_token');
+                }
+                else
+                {
+                    this.allowLogout = false;
+                }
+            });
+            if (this.allowLogout) {
+                router.navigate('/');
+            }
+        } catch (error) {
+            throw error;
+        }
     };
 
     getUser = async () => {

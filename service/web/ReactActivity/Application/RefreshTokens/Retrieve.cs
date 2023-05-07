@@ -35,6 +35,9 @@ namespace Application.RefreshTokens
             public async Task<Result<RefreshTokenDto>> Handle(Query request, CancellationToken cancellationToken)
             {
                 IQueryable<RefreshTokenDto>? query = _context.RefreshTokens
+                    .Where(r => r.Revoked == null && DateTime.UtcNow < r.Expires)
+                    .Include(rt => rt.AppUser)
+                    .OrderByDescending(rt => rt.CreatedAt)
                     .ProjectTo<RefreshTokenDto>(_mapper.ConfigurationProvider)
                     .AsQueryable();
 
@@ -54,6 +57,7 @@ namespace Application.RefreshTokens
                 {
                     return Result<RefreshTokenDto>.Failure("Failed to find refresh token");
                 }
+                _logger.LogInformation($"Revoked: {refreshTokenDto.Revoked}");
                 return Result<RefreshTokenDto>.Success(refreshTokenDto);
             }
         }
