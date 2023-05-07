@@ -53,19 +53,19 @@ export default class userStore {
 
     logout = async () => {
         try {
-            const response = await agent.Account.logout();
+            const response = await agent.Account.logout(this.user!);
 
             runInAction(() => {
                 if (response.isLogout) {
                     this.allowLogout = true;
-                    this.user = null;
-                    store.commonStore.setToken(null);
-                    window.localStorage.removeItem('access_token');
                 }
                 else
                 {
                     this.allowLogout = false;
                 }
+                this.user = null;
+                store.commonStore.setToken(null);
+                window.localStorage.removeItem('access_token');
             });
             if (this.allowLogout) {
                 router.navigate('/');

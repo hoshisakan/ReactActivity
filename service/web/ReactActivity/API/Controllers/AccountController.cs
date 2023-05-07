@@ -65,29 +65,11 @@ namespace API.Controllers
 
             if (result.Succeeded)
             {
+                
                 _logger.LogInformation($"username: {user.UserName}");
                 UserDto? userDto = new UserDto();
-                
+                userDto = await CreateUserObject(user, false);
                 await SetRefreshToken(user);
-
-                CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
-
-                if (decryptCacheTokenDto != null)
-                {
-                    _logger.LogInformation($"username: {user.UserName}, token: {decryptCacheTokenDto.Token}");
-                    userDto = await CreateUserObject(user, true);
-                }
-                else
-                {
-                    _logger.LogInformation($"username: {user.UserName}, token: null, expires_at: null");
-                    userDto = await CreateUserObject(user, false);
-                    CacheTokenDto cacheTokenDto = new CacheTokenDto{
-                        AppUserId = user.Id,
-                        Username = user.UserName,
-                        Token = userDto.Token
-                    };
-                    await SaveTokenToCache(user.UserName, cacheTokenDto);
-                }
                 return userDto;
             }
             return Unauthorized();
@@ -126,7 +108,7 @@ namespace API.Controllers
                 if (result.Succeeded)
                 {
                     await SetRefreshToken(user);
-                    return await CreateUserObject(user);
+                    return await CreateUserObject(user, false);
                 }
                 return BadRequest(result.Errors);
             }
@@ -149,7 +131,7 @@ namespace API.Controllers
                 return Unauthorized();
             }
             await SetRefreshToken(user);
-            return await CreateUserObject(user);
+            return await CreateUserObject(user, true);
         }
 
         [AllowAnonymous]
@@ -176,7 +158,9 @@ namespace API.Controllers
 
             if (user != null)
             {
-                return await CreateUserObject(user);
+                _logger.LogInformation($"username: {user.UserName} already exists, creating new token.");
+                await SetRefreshToken(user);
+                return await CreateUserObject(user, true);
             }
 
             user = new AppUser
@@ -200,53 +184,60 @@ namespace API.Controllers
 
             if (!result.Succeeded)
             {
+                _logger.LogInformation("Problem creating user account.");
                 return BadRequest("Problem creating user account.");
             }
+            _logger.LogInformation($"username: {user.UserName} created, creating new token.");
             await SetRefreshToken(user);
 
-            return await CreateUserObject(user);
+            return await CreateUserObject(user, false);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("logout")]
-        public async Task<ActionResult<LogoutDto>> Logout()
+        public async Task<ActionResult<LogoutDto>> Logout(UserDto userDto)
         {
             LogoutDto logoutDto = new LogoutDto();
             try
             {
-                string? refreshToken = Request.Cookies["refreshToken"];
-
-                if (string.IsNullOrEmpty(refreshToken))
-                {
-                    return BadRequest("Refresh token is missing.");
-                }
-
                 AppUser? user = await _userManager.Users
                     .Include(r => r.RefreshTokens)
-                    .FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name));
+                    .FirstOrDefaultAsync(x => x.UserName == userDto.Username);
 
                 if (user == null)
                 {
-                    return Unauthorized();
+                    _logger.LogInformation("User not found.");
+                    throw new InvalidOperationException("User not found.");
                 }
 
-                await _cache.RemoveAsync(user.UserName);
+                _logger.LogInformation($"username: {user.UserName}, access token: {userDto.Token}");
 
                 Result<Unit>? revokedResult = await Mediator.Send(
                     new Revoke.Command {
-                        AppUserId = user.Id,
-                        Token = refreshToken
+                        AppUserId = user.Id
                     }
                 );
 
-                Response.Cookies.Delete("refreshToken");
-
-                logoutDto = new LogoutDto
+                if (revokedResult.IsSuccess)
                 {
-                    Message = "Logout successfully",
-                    IsLogout = true,
-                    Error = string.Empty
-                };
+                    logoutDto = new LogoutDto
+                    {
+                        Message = "Logout successfully",
+                        IsLogout = true,
+                        Error = string.Empty
+                    };
+                }
+                else
+                {
+                    logoutDto = new LogoutDto
+                    {
+                        Message = "Logout failed, force logout",
+                        IsLogout = true,
+                        Error = revokedResult.Error
+                    };
+                }
+                Response.Cookies.Delete("refreshToken");
+                await _cache.RemoveAsync(user.UserName);
             }
             catch (Exception ex)
             {
@@ -271,6 +262,7 @@ namespace API.Controllers
                 AppUser? user = await _userManager.Users
                     .Include(r => r.RefreshTokens)
                     .Include(p => p.Photos)
+                    // .Where(u => u.RefreshTokens.Any(t => t.Revoked == null))
                     .FirstOrDefaultAsync(x => x.UserName == User.FindFirstValue(ClaimTypes.Name))
                 ;
 
@@ -299,7 +291,7 @@ namespace API.Controllers
                 }
                 _logger.LogInformation($"Read oldToken: {oldToken?.Token}");
                 _logger.LogInformation($"Read session refreshToken: {refreshToken}");
-                UserDto? userNewTokenDto = await CreateUserObject(user);
+                UserDto? userNewTokenDto = await CreateUserObject(user, false);
                 _logger.LogInformation($"CreateUserObject: {userNewTokenDto.Token}");
                 CacheTokenDto cacheTokenDto = new CacheTokenDto{
                     AppUserId = user.Id,
@@ -363,7 +355,7 @@ namespace API.Controllers
                 Result<Unit>? revokedResult = await Mediator.Send(
                     new Revoke.Command {
                         AppUserId = user.Id,
-                        Token = refreshToken
+                        // Token = refreshToken
                     }
                 );
                 return HandleResult(revokedResult);
@@ -375,28 +367,36 @@ namespace API.Controllers
             }
         }
 
-        private async Task<UserDto> CreateUserObject(AppUser user, bool cacheExistsToken = false)
+        private async Task<string> GetNewAccessToken(AppUser user)
+        {
+            string token = string.Empty;
+            token = _tokenService.CreateToken(user);
+            CacheTokenDto newCacheTokenDto = new CacheTokenDto{
+                AppUserId = user.Id,
+                Username = user.UserName,
+                Token = token
+            };
+            await SaveTokenToCache(user.UserName, newCacheTokenDto);
+            return token;
+        }
+
+        private async Task<UserDto> CreateUserObject(AppUser user, bool requestCheckCache)
         {
             string token = string.Empty;
             UserDto userDto = new UserDto();
 
-            if (cacheExistsToken)
+            if (requestCheckCache)
             {
-                string? cacheTokenJson = await _cache.GetStringAsync(user.UserName);
-                if (string.IsNullOrEmpty(cacheTokenJson))
+                CacheTokenDto? decryptCacheTokenDto = await DecryptCacheItem<CacheTokenDto>(user.UserName);
+                
+                if (decryptCacheTokenDto == null)
                 {
                     _logger.LogInformation($"Cache token is null, error key: {user.UserName}.");
-                    token = _tokenService.CreateToken(user);
+                    token = await GetNewAccessToken(user);
                 }
                 else
                 {
-                    CacheTokenDto? cacheTokenDto = JsonSerializer.Deserialize<CacheTokenDto>(cacheTokenJson);
-                    if (cacheTokenDto == null)
-                    {
-                        _logger.LogInformation("Deserializer Cache token failed.");
-                        throw new ArgumentNullException("Deserializer Cache token failed.");
-                    }
-                    token = cacheTokenDto.Token;
+                    token = decryptCacheTokenDto.Token;
                 }
                 userDto = new UserDto
                 {
@@ -408,35 +408,19 @@ namespace API.Controllers
             }
             else
             {
-                token = _tokenService.CreateToken(user);
-                _logger.LogInformation($"User: {user.UserName}, displayName: {user.DisplayName}, create token: {token}");
+                token = await GetNewAccessToken(user);
+                _logger.LogInformation($"User: {user.UserName}, displayName: {user.DisplayName}, create access token: {token}");
 
                 Photo? userMainPhoto = user.Photos?.Where(x => x.IsMain).FirstOrDefault();
+                string? userMainPhotoUrl = userMainPhoto?.Url;
 
-                if (userMainPhoto == null)
+                userDto = new UserDto
                 {
-                    _logger.LogInformation($"User: {user.UserName}, displayName: {user.DisplayName}, main photo is null.");
-                    return new UserDto
-                    {
-                        DisplayName = user.DisplayName,
-                        Image = null,
-                        Token = token,
-                        Username = user.UserName
-                    };
-                }
-                else
-                {
-                    _logger.LogInformation(
-                        $"User: {user.UserName}, displayName: {user.DisplayName}, main photo url: {userMainPhoto.Url}."
-                    );
-                    return new UserDto
-                    {
-                        DisplayName = user.DisplayName,
-                        Image = userMainPhoto.Url,
-                        Token = token,
-                        Username = user.UserName
-                    };
-                }
+                    DisplayName = user.DisplayName,
+                    Image = userMainPhotoUrl,
+                    Token = token,
+                    Username = user.UserName
+                };
             }
             return userDto;
         }

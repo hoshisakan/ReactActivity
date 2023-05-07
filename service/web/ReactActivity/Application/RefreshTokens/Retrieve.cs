@@ -41,8 +41,8 @@ namespace Application.RefreshTokens
                     .ProjectTo<RefreshTokenDto>(_mapper.ConfigurationProvider)
                     .AsQueryable();
 
-                _logger.LogInformation($"request.Token: {request.Token}");
-                _logger.LogInformation($"request.Predicate: {request.Predicate}");
+                _logger.LogInformation($"request refresh token: {request.Token}");
+                _logger.LogInformation($"request predicate: {request.Predicate}");
 
                 query = request.Predicate switch
                 {

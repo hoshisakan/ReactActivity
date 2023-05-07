@@ -16,7 +16,6 @@ namespace Application.RefreshTokens
         public class Command : IRequest<Result<Unit>>
         {
             public string AppUserId { get; set; }
-            public string Token { get; set; }
         }
 
         public class CommandValidator : AbstractValidator<Command>
@@ -24,7 +23,6 @@ namespace Application.RefreshTokens
             public CommandValidator()
             {
                 RuleFor(x => x.AppUserId).NotEmpty();
-                RuleFor(x => x.Token).NotEmpty();
             }
         }
 
@@ -42,13 +40,10 @@ namespace Application.RefreshTokens
             public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 List<RefreshToken>? refreshTokenFromDb = await _context.RefreshTokens
-                    .Where(u => u.AppUser.Id == request.AppUserId && u.Token == request.Token)
+                    .Where(u => u.AppUser.Id == request.AppUserId)
                     .Include(rt => rt.AppUser)
                     .ToListAsync();
                 
-                _logger.LogInformation(
-                    $"request.AppUserId: {request.AppUserId}, request.Token: {request.Token}, revoke count: {refreshTokenFromDb.Count}");
-
                 if (refreshTokenFromDb.Count == 0)
                 {
                     return Result<Unit>.Failure("Failed to revoke the refresh token, because the token invalid.");
@@ -57,8 +52,7 @@ namespace Application.RefreshTokens
                 refreshTokenFromDb.Select(rt => { rt.Revoked = DateTime.UtcNow; return rt; }).ToList();
 
                 _logger.LogInformation(
-                    $"request.AppUserId: {request.AppUserId}, request.Token: {request.Token}, revoke count: {refreshTokenFromDb.Count}"
-                );
+                    $"request.AppUserId: {request.AppUserId}, revoke count: {refreshTokenFromDb.Count}");
 
                 bool result = await _context.SaveChangesAsync() > 0;
 

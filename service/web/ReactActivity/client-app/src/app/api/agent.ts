@@ -104,7 +104,7 @@ const Account = {
     fbLogin: (accessToken: string) => requests
         .post<User>(`/account/fbLogin?accessToken=${accessToken}`, {}),
     refreshToken: () => requests.post<User>('/account/refresh-token', {}),
-    logout: () => requests.post<Logout>('/account/logout', {}),
+    logout: (user: User) => requests.post<Logout>('/account/logout', user),
 };
 
 const Profiles = {
