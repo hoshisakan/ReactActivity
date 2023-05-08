@@ -49,6 +49,29 @@ services:
         user: root
         tty: true
         restart: on-failure:3
+    
+    frontend:
+        build:
+            context: ./conf/nodejs
+            dockerfile: Dockerfile
+            args:
+                - NODEJS_ENV=${NODEJS_ENV}
+        image: hoshisakan/${PROJECT_NAME}/nodejs:${NODEJS_IMAGE_VERSION}
+        container_name: ${PROJECT_NAME}_frontend
+        volumes:
+            - ./web/ReactActivity/client-app:/app
+            - ./web/production/frontend:/production/frontend
+            - ./web/production/certs:/production/certs
+            - ./logs/frontend:/var/log/frontend
+        ports:
+            - ${NODEJS_EXTERNAL_PORT}:${NODEJS_INNER_PORT}
+        depends_on:
+            - db
+        networks:
+            react-activity-network:
+                ipv4_address: ${NODEJS_HOST_IP}
+        tty: true
+        restart: on-failure:3
 
     backend:
         build:
