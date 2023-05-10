@@ -195,14 +195,14 @@ namespace API.Controllers
 
         [AllowAnonymous]
         [HttpPost("logout")]
-        public async Task<ActionResult<LogoutDto>> Logout(UserDto userDto)
+        public async Task<ActionResult<LogoutResponseDto>> Logout(LogoutRequestDto logoutRequestDto)
         {
-            LogoutDto logoutDto = new LogoutDto();
+            LogoutResponseDto logoutDto = new LogoutResponseDto();
             try
             {
                 AppUser? user = await _userManager.Users
                     .Include(r => r.RefreshTokens)
-                    .FirstOrDefaultAsync(x => x.UserName == userDto.Username);
+                    .FirstOrDefaultAsync(x => x.UserName == logoutRequestDto.Username);
 
                 if (user == null)
                 {
@@ -210,7 +210,7 @@ namespace API.Controllers
                     throw new InvalidOperationException("User not found.");
                 }
 
-                _logger.LogInformation($"username: {user.UserName}, access token: {userDto.Token}");
+                _logger.LogInformation($"username: {user.UserName}, access token: {logoutRequestDto.Token}");
 
                 Result<Unit>? revokedResult = await Mediator.Send(
                     new Revoke.Command {
@@ -220,7 +220,7 @@ namespace API.Controllers
 
                 if (revokedResult.IsSuccess)
                 {
-                    logoutDto = new LogoutDto
+                    logoutDto = new LogoutResponseDto
                     {
                         Message = "Logout successfully",
                         IsLogout = true,
@@ -229,7 +229,7 @@ namespace API.Controllers
                 }
                 else
                 {
-                    logoutDto = new LogoutDto
+                    logoutDto = new LogoutResponseDto
                     {
                         Message = "Logout failed, force logout",
                         IsLogout = true,
@@ -242,7 +242,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
-                logoutDto = new LogoutDto
+                logoutDto = new LogoutResponseDto
                 {
                     Message = "Logout failed",
                     IsLogout = false,

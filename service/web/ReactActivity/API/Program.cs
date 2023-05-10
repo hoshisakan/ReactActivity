@@ -34,11 +34,24 @@ try
     builder.Services.AddControllers();
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddIdentityServices(builder.Configuration);
-    builder.Services.AddDataBackupServices(builder.Configuration);
+    // builder.Services.AddDataBackupServices(builder.Configuration);
+
+    // builder.WebHost.UseKestrel(options =>
+    // {
+    //     options.ListenAnyIP(builder.Configuration.GetSection("KestrelSettings:Endpoints:Http:Port").Get<int>());
+    //     options.Limits.MaxRequestBodySize = int.MaxValue;
+    // });
 
     builder.WebHost.UseKestrel(options =>
     {
         options.ListenAnyIP(builder.Configuration.GetSection("KestrelSettings:Endpoints:Http:Port").Get<int>());
+        options.ListenAnyIP(builder.Configuration.GetSection("KestrelSettings:Endpoints:Https:Port").Get<int>(), listenOptions =>
+        {
+            listenOptions.UseHttps(
+                builder.Configuration["KestrelSettings:Certificates:Default:Path"],
+                builder.Configuration["KestrelSettings:Certificates:Default:Password"]
+            );
+        });
         options.Limits.MaxRequestBodySize = int.MaxValue;
     });
 

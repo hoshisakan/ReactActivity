@@ -1,6 +1,6 @@
 namespace API.DTOs
 {
-    public class LogoutDto
+    public class LogoutResponseDto
     {
         public string Message { get; set; }
         public bool IsLogout { get; set; }

@@ -1,6 +1,6 @@
 import agent from '../api/agent';
 import { store } from './store';
-import { User, UserFormValues } from '../models/user';
+import { User, UserFormValues, UserLogout } from '../models/user';
 import { router } from '../router/Routes';
 import { Buffer } from 'buffer';
 import { makeAutoObservable, runInAction } from 'mobx';
@@ -53,7 +53,11 @@ export default class userStore {
 
     logout = async () => {
         try {
-            const response = await agent.Account.logout(this.user!);
+            const userLogout: UserLogout = {
+                username: this.user!.username,
+                token: this.user!.token,
+            };
+            const response = await agent.Account.logout(userLogout);
 
             runInAction(() => {
                 if (response.isLogout) {

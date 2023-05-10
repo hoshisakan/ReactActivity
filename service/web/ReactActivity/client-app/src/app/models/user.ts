@@ -11,3 +11,8 @@ export interface UserFormValues {
     displayName?: string;
     username?: string;
 }
+
+export interface UserLogout {
+    username: string;
+    token: string;
+}

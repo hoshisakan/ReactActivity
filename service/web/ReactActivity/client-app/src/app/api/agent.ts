@@ -1,5 +1,5 @@
 import { Activity, ActivityFormValues } from '../models/activity';
-import { User, UserFormValues } from '../models/user';
+import { User, UserFormValues, UserLogout } from '../models/user';
 import { Photo, Profile, UserActivity } from '../models/profile';
 import { store } from '../stores/store';
 import { router } from '../router/Routes';
@@ -104,7 +104,7 @@ const Account = {
     fbLogin: (accessToken: string) => requests
         .post<User>(`/account/fbLogin?accessToken=${accessToken}`, {}),
     refreshToken: () => requests.post<User>('/account/refresh-token', {}),
-    logout: (user: User) => requests.post<Logout>('/account/logout', user),
+    logout: (user: UserLogout) => requests.post<Logout>('/account/logout', user),
 };
 
 const Profiles = {

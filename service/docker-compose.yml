@@ -32,8 +32,10 @@ services:
         environment:
           - LANG=${NGINX_LANG_NAME}
         volumes:
-            - ./web/production/frontend/dist:/usr/share/nginx/dist
-            - ./web/production/certs:/etc/nginx/ssl
+            # - ./web/production/frontend/dist:/usr/share/nginx/dist
+            - ./web/production/certs/ssl/nginx:/etc/nginx/ssl
+            - ./web/production/certs/data/.well-known/pki-validation:/usr/share/nginx/html/letsencrypt/
+            - ./web/test/html:/usr/share/nginx/html
             - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
             - ./conf/nginx/conf.d:/etc/nginx/conf.d
             - ./logs/nginx:/var/log/nginx
@@ -49,7 +51,7 @@ services:
         user: root
         tty: true
         restart: on-failure:3
-    
+
     frontend:
         build:
             context: ./conf/nodejs
@@ -99,12 +101,14 @@ services:
             - DOTNET_POSTGRES_HOST_IP=${POSTGRES_HOST_IP}
             - DOTNET_POSTGRES_PORT=${POSTGRES_INNER_PORT}
         volumes:
+            - ./web/ReactActivity:/app
             - ./web/production/backend:/production/backend
-            - ./web/production/certs:/production/certs
             - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
             - ./logs/backend:/var/log/backend
         ports:
-            - ${DOTNET_EXTERNAL_PORT}:${DOTNET_INNER_PORT}
+            - ${DOTNET_EXTERNAL_HTTP_PORT}:${DOTNET_INNER_HTTP_PORT}
+            - ${DOTNET_EXTERNAL_HTTPS_PORT}:${DOTNET_INNER_HTTPS_PORT}
+            - ${DOTNET_TEST_EXTERNAL_HTTP_PORT}:${DOTNET_TEST_EXTERNAL_HTTP_PORT}
         depends_on:
           - db
         networks:
