@@ -32,7 +32,7 @@ services:
         environment:
           - LANG=${NGINX_LANG_NAME}
         volumes:
-            # - ./web/production/frontend/dist:/usr/share/nginx/dist
+            - ./web/production/frontend/dist:/usr/share/nginx/dist
             - ./web/production/certs/ssl/nginx:/etc/nginx/ssl
             - ./web/production/certs/data/.well-known/pki-validation:/usr/share/nginx/html/letsencrypt/
             - ./web/test/html:/usr/share/nginx/html
@@ -61,10 +61,7 @@ services:
         image: hoshisakan/${PROJECT_NAME}/nodejs:${NODEJS_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_frontend
         volumes:
-            - ./web/ReactActivity/client-app:/app
-            - ./web/production/frontend:/production/frontend
-            - ./web/production/certs:/production/certs
-            - ./logs/frontend:/var/log/frontend
+            - ./web:/app
         ports:
             - ${NODEJS_EXTERNAL_PORT}:${NODEJS_INNER_PORT}
         depends_on:
@@ -101,8 +98,7 @@ services:
             - DOTNET_POSTGRES_HOST_IP=${POSTGRES_HOST_IP}
             - DOTNET_POSTGRES_PORT=${POSTGRES_INNER_PORT}
         volumes:
-            - ./web/ReactActivity:/app
-            - ./web/production/backend:/production/backend
+            - ./web:/app
             - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
             - ./logs/backend:/var/log/backend
         ports:

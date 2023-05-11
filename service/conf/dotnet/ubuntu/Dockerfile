@@ -66,9 +66,11 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p ${POSTGRES_DATA_BACKUP_PATH}
 
 # WORKDIR backend directory
-# WORKDIR /production/backend
+# For production
+WORKDIR /app/production/backend
 
-WORKDIR /app/API
+# For development
+# WORKDIR /app/ReactActivity/API
 
 # Run the app
-# ENTRYPOINT [ "dotnet", "API.dll" ]
+ENTRYPOINT [ "dotnet", "API.dll" ]

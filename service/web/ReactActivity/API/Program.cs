@@ -34,7 +34,7 @@ try
     builder.Services.AddControllers();
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddIdentityServices(builder.Configuration);
-    // builder.Services.AddDataBackupServices(builder.Configuration);
+    builder.Services.AddDataBackupServices(builder.Configuration);
 
     // builder.WebHost.UseKestrel(options =>
     // {
