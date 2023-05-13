@@ -1,4 +1,5 @@
 using Persistence.DbInitializer;
+using Infrastructure.StaticFilePathInitializer;
 using API.Extensions;
 using API.Middleware;
 using API.SignalR;
@@ -17,7 +18,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
     
     builder.Services.AddControllers(opt =>
     {
@@ -55,7 +56,7 @@ try
         options.Limits.MaxRequestBodySize = int.MaxValue;
     });
 
-    var app = builder.Build();
+    WebApplication? app = builder.Build();
 
     // Configure the HTTP request pipeline.
     app.UseMiddleware<ExceptionMiddleware>();
@@ -84,10 +85,12 @@ try
     {
         IDbInitializer dbInitializer = services.GetRequiredService<IDbInitializer>();
         await dbInitializer.SeedData();
+        IStaticFilePathInitializer staticFilePathInitializer = services.GetRequiredService<IStaticFilePathInitializer>();
+        staticFilePathInitializer.StoragePathInitializer();
     }
     catch (Exception ex)
     {
-        Log.Error($"An error occurred while migrating or seeding the database: {ex.Message}");
+        Log.Error($"An error occurred while migrating or seeding the database or initializing the static file path: {ex.Message}");
     }
 
     app.Run();

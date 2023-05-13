@@ -5,7 +5,7 @@ using Application.Core;
 using Application.Interfaces;
 using Infrastructure.Security;
 using Infrastructure.Photos;
-
+using Infrastructure.StaticFilePathInitializer;
 
 using Microsoft.EntityFrameworkCore;
 using MediatR;
@@ -67,6 +67,7 @@ namespace API.Extensions
             }
 
             services.AddScoped<IDbInitializer, DbInitializer>();
+            services.AddScoped<IStaticFilePathInitializer, StaticFilePathInitializer>();
             services.AddMediatR(typeof(List.Handler).Assembly);
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);
             services.AddFluentValidationAutoValidation();
