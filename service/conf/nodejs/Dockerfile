@@ -6,4 +6,4 @@ ENV NODE_ENV=${NODEJS_ENV}
 
 RUN npm install -g create-react-app
 
-WORKDIR /app
+WORKDIR /app/ReactActivity/client-app
