@@ -1,13 +1,15 @@
-import { useState } from 'react';
 import { useStore } from '../../app/stores/store';
-
-import { Button, Grid, Header, Tab } from 'semantic-ui-react';
 import ProfileAbout from './ProfileEditForm';
+
+import {  useState } from 'react';
+import { Button, Grid, Header, Tab } from 'semantic-ui-react';
 
 export default function ProfileEdit() {
     const {
-        profileStore: { isCurrentUser, profile },
+        profileStore, commonStore
     } = useStore();
+    const { profile, isCurrentUser } = profileStore;
+    const { detectedMobileDevice } = commonStore;
     const [editMode, setEditMode] = useState(false);
 
     return (
@@ -17,7 +19,7 @@ export default function ProfileEdit() {
                     <Header floated="left" icon="user" content={`About ${profile?.displayName}`} />
                     {isCurrentUser && (
                         <Button
-                            floated="right"
+                            floated={detectedMobileDevice ? 'left' : 'right'}
                             basic
                             content={editMode ? 'Cancel' : 'Edit Profile'}
                             onClick={() => setEditMode(!editMode)}

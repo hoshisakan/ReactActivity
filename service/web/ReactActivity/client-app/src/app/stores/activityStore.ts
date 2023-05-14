@@ -7,7 +7,6 @@ import { Pagination, PagingParams } from '../models/pagination';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import { format } from 'date-fns';
 
-
 export default class ActivityStore {
     activityRegistry = new Map<string, Activity>();
     currSelectedActivity: Activity | undefined = undefined;
@@ -17,6 +16,16 @@ export default class ActivityStore {
     pagination: Pagination | null = null;
     pagingParams = new PagingParams();
     predicate = new Map().set('all', true);
+    activityDashboardSize = {
+        activityListItemWidth: 10,
+        activityFiltersSidebarWidth: 6,
+    };
+    dashBoardSizeLoaded = false;
+    activityDetailsSize = {
+        activityDetailedCardWidth: 10,
+        activityDetailedSidebarWidth: 6,
+    };
+    detailsSizeLoaded = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -28,7 +37,7 @@ export default class ActivityStore {
                 this.activityRegistry.clear();
                 this.loadActivities();
             }
-        )
+        );
     }
 
     setPagingParams = (pagingParams: PagingParams) => {
@@ -42,7 +51,7 @@ export default class ActivityStore {
                     this.predicate.delete(key);
                 }
             });
-        }
+        };
         switch (predicate) {
             case 'all':
                 resetPredicate();
@@ -261,5 +270,29 @@ export default class ActivityStore {
                 }
             });
         });
+    };
+
+    setActivityDashboardComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.activityDashboardSize.activityListItemWidth = 10;
+            this.activityDashboardSize.activityFiltersSidebarWidth = 6;
+        } else {
+            this.activityDashboardSize.activityListItemWidth = 14;
+            this.activityDashboardSize.activityFiltersSidebarWidth = 12;
+        }
+        this.dashBoardSizeLoaded = true;
+    };
+
+    setActivityDetailsComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.activityDetailsSize.activityDetailedCardWidth = 10;
+            this.activityDetailsSize.activityDetailedSidebarWidth = 6;
+        } else {
+            this.activityDetailsSize.activityDetailedCardWidth = 15;
+            this.activityDetailsSize.activityDetailedSidebarWidth = 12;
+        }
+        this.detailsSizeLoaded = true;
     };
 }

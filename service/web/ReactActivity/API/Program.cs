@@ -97,7 +97,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Error($"An error occurred while starting the application: {ex.Message}");
+    Log.Error($"An error occurred while starting the application\nMessage: {ex.Message}\nStack trace: {ex.StackTrace}");
 }
 finally
 {

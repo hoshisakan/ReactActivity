@@ -14,6 +14,15 @@ export default class ProfileStore {
     activeTab = 0;
     userActivities: UserActivity[] = [];
     loadingActivities = false;
+    profileHeaderSize = {
+        contentWidth: 12,
+        featuresWidth: 4,
+    };
+    profileHeaderSizeLoaded = false;
+    profileContentEditStyle = {
+        editButtonFloated: 'right'
+    }
+    profileContentEditStyleLoaded = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -190,5 +199,17 @@ export default class ProfileStore {
             console.log(error);
             runInAction(() => (this.loadingActivities = false));
         }
+    }
+
+    setProfileHeaderComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileHeaderSize.contentWidth= 12;
+            this.profileHeaderSize.featuresWidth = 4;
+        } else {
+            this.profileHeaderSize.contentWidth= 7;
+            this.profileHeaderSize.featuresWidth = 9;
+        }
+        this.profileHeaderSizeLoaded = true;
     }
 }

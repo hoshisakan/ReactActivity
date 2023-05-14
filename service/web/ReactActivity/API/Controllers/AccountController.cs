@@ -68,7 +68,7 @@ namespace API.Controllers
                 
                 _logger.LogInformation($"username: {user.UserName}");
                 UserDto? userDto = new UserDto();
-                userDto = await CreateUserObject(user, false);
+                userDto = await CreateUserObject(user, true);
                 await SetRefreshToken(user);
                 return userDto;
             }
@@ -324,6 +324,9 @@ namespace API.Controllers
             return BadRequest("Invalid access token.");
         }
 
+        //TODO: Need to fix this, because any user can revoke any user's token,
+        //TODO: Need to check if the user is the owner of the token, or admin
+        //TODO: If the user is admin, then can revoke any user's token, otherwise, only revoke his own token
         [AllowAnonymous]
         [HttpPost("revoke-token/{username}")]
         public async Task<IActionResult> RevokeRefreshToken(string username)

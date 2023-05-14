@@ -3,9 +3,9 @@ import { Profile } from '../../app/models/profile';
 import { useStore } from '../../app/stores/store';
 import ProfileFollowings from './ProfileFollowings';
 import ProfileEdit from './ProfileEdit';
+import ProfileActivities from './ProfileActivities';
 
 import { Tab } from 'semantic-ui-react';
-import ProfileActivities from './ProfileActivities';
 
 interface Props {
     profile: Profile;

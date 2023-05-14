@@ -6,6 +6,11 @@ export default class CommonStore {
     error: ServerError | null = null;
     token: string | null = localStorage.getItem('access_token');
     appLoaded = false;
+    windowSize = {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+    detectedMobileDevice = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -13,12 +18,9 @@ export default class CommonStore {
         reaction(
             () => this.token,
             (token) => {
-                if (token)
-                {
+                if (token) {
                     localStorage.setItem('access_token', token);
-                }
-                else
-                {
+                } else {
                     localStorage.removeItem('access_token');
                 }
             }
@@ -43,4 +45,15 @@ export default class CommonStore {
     setAppLoaded = () => {
         this.appLoaded = true;
     };
+
+    setDetectedMobileDevice = () => {
+        if (this.windowSize.width >= 400)
+        {
+            this.detectedMobileDevice = false;
+        }
+        else if (this.windowSize.width < 400)
+        {
+            this.detectedMobileDevice = true;
+        }
+    }
 }

@@ -104,7 +104,7 @@ services:
         ports:
             - ${DOTNET_EXTERNAL_HTTP_PORT}:${DOTNET_INNER_HTTP_PORT}
             - ${DOTNET_EXTERNAL_HTTPS_PORT}:${DOTNET_INNER_HTTPS_PORT}
-            - ${DOTNET_TEST_EXTERNAL_HTTP_PORT}:${DOTNET_TEST_EXTERNAL_HTTP_PORT}
+            - ${DOTNET_TEST_EXTERNAL_HTTP_PORT}:${DOTNET_TEST_INNER_HTTP_PORT}
         depends_on:
           - db
         networks:

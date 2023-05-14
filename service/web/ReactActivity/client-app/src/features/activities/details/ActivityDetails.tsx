@@ -5,37 +5,64 @@ import ActivityDetailedInfo from './ActivityDetailedInfo';
 import ActivityDetailedChat from './ActivityDetailedChat';
 import ActivityDetailedSidebar from './ActivityDetailedSidebar';
 
-import { Grid } from 'semantic-ui-react';
+import { Grid, SemanticWIDTHS } from 'semantic-ui-react';
 import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 
 export default observer(function ActivityList() {
-    const { activityStore } = useStore();
-    const { currSelectedActivity: activity, loadActivity, loadingInitial, clearSelectedActivity } = activityStore;
+    const { activityStore, commonStore } = useStore();
+    const {
+        currSelectedActivity: activity,
+        loadActivity,
+        loadingInitial,
+        clearSelectedActivity,
+        detailsSizeLoaded,
+        setActivityDetailsComponentSize,
+        activityDetailsSize,
+    } = activityStore;
+    const { detectedMobileDevice } = commonStore;
     const { id } = useParams();
 
     useEffect(() => {
         if (id) {
             loadActivity(id);
         }
+        if (!detailsSizeLoaded) {
+            setActivityDetailsComponentSize();
+        }
         return () => clearSelectedActivity();
-    }, [id, loadActivity, clearSelectedActivity]);
+    }, [id, loadActivity, clearSelectedActivity, detailsSizeLoaded, setActivityDetailsComponentSize]);
 
     if (loadingInitial || !activity) {
         return <LoadingComponent />;
     }
 
     return (
-        <Grid>
-            <Grid.Column width={10}>
-                <ActivityDetailedHeader activity={activity} />
-                <ActivityDetailedInfo activity={activity} />
-                <ActivityDetailedChat activityId={activity.id} />
-            </Grid.Column>
-            <Grid.Column width={6}>
-                <ActivityDetailedSidebar activity={activity} />
-            </Grid.Column>
-        </Grid>
+        <>
+            {detectedMobileDevice ? (
+                <Grid>
+                    <Grid.Column width={activityDetailsSize.activityDetailedSidebarWidth as SemanticWIDTHS}>
+                        <ActivityDetailedSidebar activity={activity} />
+                    </Grid.Column>
+                    <Grid.Column width={activityDetailsSize.activityDetailedCardWidth as SemanticWIDTHS}>
+                        <ActivityDetailedHeader activity={activity} />
+                        <ActivityDetailedInfo activity={activity} />
+                        <ActivityDetailedChat activityId={activity.id} />
+                    </Grid.Column>
+                </Grid>
+            ) : (
+                <Grid>
+                    <Grid.Column width={activityDetailsSize.activityDetailedCardWidth as SemanticWIDTHS}>
+                        <ActivityDetailedHeader activity={activity} />
+                        <ActivityDetailedInfo activity={activity} />
+                        <ActivityDetailedChat activityId={activity.id} />
+                    </Grid.Column>
+                    <Grid.Column width={activityDetailsSize.activityDetailedSidebarWidth as SemanticWIDTHS}>
+                        <ActivityDetailedSidebar activity={activity} />
+                    </Grid.Column>
+                </Grid>
+            )}
+        </>
     );
 });
