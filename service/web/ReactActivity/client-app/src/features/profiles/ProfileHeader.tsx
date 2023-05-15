@@ -12,13 +12,13 @@ interface Props {
 
 export default observer(function ProfileHeader({ profile }: Props) {
     const { profileStore } = useStore();
-    const { profileHeaderSizeLoaded, profileHeaderSize } = profileStore;
+    const { profileHeaderSizeLoaded, profileHeaderSize, setProfileHeaderComponentSize } = profileStore;
 
     useEffect(() => {
         if (!profileHeaderSizeLoaded) {
-            profileStore.setProfileHeaderComponentSize();
+            setProfileHeaderComponentSize();
         }
-    }, [profileHeaderSizeLoaded, profileStore]);
+    }, [profileHeaderSizeLoaded, profileStore, setProfileHeaderComponentSize]);
 
     return (
         <Segment>

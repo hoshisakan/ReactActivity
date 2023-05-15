@@ -3,8 +3,8 @@ import { useStore } from '../../app/stores/store';
 import PhotoUploadWidget from '../../app/common/imageUpload/PhotoUploadWidget';
 
 import { observer } from 'mobx-react-lite';
-import { Card, Header, Tab, Image, Grid, Button } from 'semantic-ui-react';
-import { SyntheticEvent, useState } from 'react';
+import { Card, Header, Tab, Image, Grid, Button, SemanticWIDTHS } from 'semantic-ui-react';
+import { SyntheticEvent, useEffect, useState } from 'react';
 
 interface Props {
     profile: Profile;
@@ -12,7 +12,19 @@ interface Props {
 
 export default observer(function ProfilePhotos({ profile }: Props) {
     const {
-        profileStore: { isCurrentUser, uploadPhoto, uploading, loading, setMainPhoto, deletePhoto },
+        profileStore: {
+            isCurrentUser,
+            uploadPhoto,
+            uploading,
+            loading,
+            setMainPhoto,
+            deletePhoto,
+            profileContentPhotosSizeLoaded,
+            profileContentPhotosSize,
+            setProfileContentPhotosComponentSize,
+            profileContentPhotoUploadWidgetsSizeLoaded,
+            setProfileContentPhotoUploadWidgetsComponentSize,
+        },
     } = useStore();
     const [addPhotoMode, setAddPhotoMode] = useState(false);
     const [target, setTarget] = useState('');
@@ -30,6 +42,15 @@ export default observer(function ProfilePhotos({ profile }: Props) {
         setTarget(e.currentTarget.name);
         deletePhoto(photo);
     }
+
+    useEffect(() => {
+        if (!profileContentPhotosSizeLoaded) {
+            setProfileContentPhotosComponentSize();
+        }
+        if (!profileContentPhotoUploadWidgetsSizeLoaded) {
+            setProfileContentPhotoUploadWidgetsComponentSize();
+        }
+    }, [profileContentPhotoUploadWidgetsSizeLoaded, profileContentPhotosSizeLoaded, setProfileContentPhotoUploadWidgetsComponentSize, setProfileContentPhotosComponentSize]);
 
     return (
         <Tab.Pane>
@@ -49,7 +70,7 @@ export default observer(function ProfilePhotos({ profile }: Props) {
                     {addPhotoMode ? (
                         <PhotoUploadWidget uploadPhoto={handlePhotoUpload} loading={uploading} />
                     ) : (
-                        <Card.Group itemsPerRow={5}>
+                        <Card.Group itemsPerRow={profileContentPhotosSize.cardGroupItemsPerRow as SemanticWIDTHS}>
                             {profile.photos?.map((photo) => (
                                 <Card key={photo.id}>
                                     <Image src={photo.url} />
@@ -71,9 +92,8 @@ export default observer(function ProfilePhotos({ profile }: Props) {
                                                 name={photo.id}
                                                 disabled={photo.isMain}
                                                 loading={target === photo.id && loading}
-                                                onClick={e => handleDeletePhoto(photo, e)}
-                                            >
-                                            </Button>
+                                                onClick={(e) => handleDeletePhoto(photo, e)}
+                                            ></Button>
                                         </Button.Group>
                                     )}
                                 </Card>

@@ -19,17 +19,31 @@ export default class ProfileStore {
         featuresWidth: 4,
     };
     profileHeaderSizeLoaded = false;
-    profileContentEditStyle = {
-        editButtonFloated: 'right'
-    }
-    profileContentEditStyleLoaded = false;
+    profileContentFollowingsSize = {
+        cardGroupItemsPerRow: 4,
+    };
+    profileContentFollowingsSizeLoaded = false;
+    profileContentEventsSize = {
+        cardGroupItemsPerRow: 4,
+    };
+    profileContentEventsSizeLoaded = false;
+    profileContentPhotosSize = {
+        cardGroupItemsPerRow: 5,
+    };
+    profileContentPhotosSizeLoaded = false;
+    profileContentPhotoUploadWidgetsSize = {
+        dropzoneCardGroupColumnWidth: 4,
+        cropPhotoCardGroupColumnWidth: 4,
+        previewPhotoCardGroupColumnWidth: 4,
+    };
+    profileContentPhotoUploadWidgetsSizeLoaded = false;
 
     constructor() {
         makeAutoObservable(this);
 
         reaction(
             () => this.activeTab,
-            activeTab => {
+            (activeTab) => {
                 if (activeTab === 3 || activeTab === 4) {
                     const predicate = this.activeTab === 3 ? 'followers' : 'following';
                     this.loadFollowings(predicate);
@@ -37,12 +51,12 @@ export default class ProfileStore {
                     this.followings = [];
                 }
             }
-        )
+        );
     }
 
     setActiveTab = (activeTab: any) => {
         this.activeTab = activeTab;
-    }
+    };
 
     get isCurrentUser() {
         if (store.userStore.user && this.profile) {
@@ -66,7 +80,7 @@ export default class ProfileStore {
             runInAction(() => (this.loadingProfile = false));
         }
     };
-    
+
     updateProfile = async (profile: Partial<Profile>) => {
         // this.loading = true;
         try {
@@ -75,14 +89,14 @@ export default class ProfileStore {
                 if (profile.displayName && profile.displayName !== store.userStore.user?.displayName) {
                     store.userStore.setDisplayName(profile.displayName);
                 }
-                this.profile = {...this.profile, ...profile as Profile};
+                this.profile = { ...this.profile, ...(profile as Profile) };
                 // this.loading = false;
             });
         } catch (error) {
             console.log(error);
             // runInAction(() => (this.loading = false));
         }
-    }
+    };
 
     uploadPhoto = async (file: Blob) => {
         this.uploading = true;
@@ -146,16 +160,17 @@ export default class ProfileStore {
             await agent.Profiles.updateFollower(username);
             store.activityStore.updateAttendeeFollowing(username);
             runInAction(() => {
-                if (this.profile && this.profile.username !== store.userStore.user?.username && this.profile.username !== username) {
+                if (
+                    this.profile &&
+                    this.profile.username !== store.userStore.user?.username &&
+                    this.profile.username !== username
+                ) {
                     following ? this.profile.followersCount++ : this.profile.followersCount--;
                     this.profile.following = !this.profile.following;
-                }
-                else if (this.profile && this.profile.username !== store.userStore.user?.username) {
+                } else if (this.profile && this.profile.username !== store.userStore.user?.username) {
                     following ? this.profile.followersCount++ : this.profile.followersCount--;
                     this.profile.following = !this.profile.following;
-                }
-                else if (this.profile && this.profile.username === store.userStore.user?.username)
-                {
+                } else if (this.profile && this.profile.username === store.userStore.user?.username) {
                     following ? this.profile.followingCount++ : this.profile.followingCount--;
                 }
                 this.followings.forEach((profile) => {
@@ -175,8 +190,7 @@ export default class ProfileStore {
     loadFollowings = async (predicate: string) => {
         this.loadingFollowings = true;
         try {
-            const currentUserFollowings = await agent.Profiles.listFollowings(
-                this.profile!.username, predicate);
+            const currentUserFollowings = await agent.Profiles.listFollowings(this.profile!.username, predicate);
             runInAction(() => {
                 this.followings = currentUserFollowings;
                 this.loadingFollowings = false;
@@ -199,17 +213,63 @@ export default class ProfileStore {
             console.log(error);
             runInAction(() => (this.loadingActivities = false));
         }
-    }
+    };
 
     setProfileHeaderComponentSize = () => {
         const detectedMobileDevice = store.commonStore.detectedMobileDevice;
         if (!detectedMobileDevice) {
-            this.profileHeaderSize.contentWidth= 12;
+            this.profileHeaderSize.contentWidth = 12;
             this.profileHeaderSize.featuresWidth = 4;
         } else {
-            this.profileHeaderSize.contentWidth= 7;
+            this.profileHeaderSize.contentWidth = 7;
             this.profileHeaderSize.featuresWidth = 9;
         }
         this.profileHeaderSizeLoaded = true;
-    }
+    };
+
+    setProfileContentFollowingsComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileContentFollowingsSize.cardGroupItemsPerRow = 4;
+        } else {
+            this.profileContentFollowingsSize.cardGroupItemsPerRow = 1;
+        }
+        this.profileContentFollowingsSizeLoaded = true;
+    };
+
+    setProfileContentEventsComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileContentEventsSize.cardGroupItemsPerRow = 4;
+        } else {
+            this.profileContentEventsSize.cardGroupItemsPerRow = 1;
+        }
+        this.profileContentEventsSizeLoaded = true;
+    };
+
+    setProfileContentPhotosComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileContentPhotosSize.cardGroupItemsPerRow = 5;
+        } else {
+            this.profileContentPhotosSize.cardGroupItemsPerRow = 1;
+        }
+        this.profileContentPhotosSizeLoaded = true;
+    };
+
+    setProfileContentPhotoUploadWidgetsComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileContentPhotoUploadWidgetsSize.dropzoneCardGroupColumnWidth = 4;
+            this.profileContentPhotoUploadWidgetsSize.cropPhotoCardGroupColumnWidth = 4;
+            this.profileContentPhotoUploadWidgetsSize.previewPhotoCardGroupColumnWidth = 4;
+
+        } else {
+            this.profileContentPhotoUploadWidgetsSize.dropzoneCardGroupColumnWidth = 14;
+            this.profileContentPhotoUploadWidgetsSize.cropPhotoCardGroupColumnWidth = 14;
+            this.profileContentPhotoUploadWidgetsSize.previewPhotoCardGroupColumnWidth = 14;
+        }
+        this.profileContentPhotoUploadWidgetsSizeLoaded = true;
+        // alert(this.profileContentPhotoUploadWidgetsSize.cardGroupColumnWidth);
+    };
 }

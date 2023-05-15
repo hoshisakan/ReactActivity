@@ -28,7 +28,6 @@ export default class userStore {
             router.navigate('/activities');
             store.modalStore.closeModal();
         } catch (error) {
-            alert('Error: ' + error);
             throw error;
         }
     };

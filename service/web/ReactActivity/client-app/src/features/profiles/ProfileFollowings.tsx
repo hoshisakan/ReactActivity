@@ -1,12 +1,27 @@
+import { useEffect } from 'react';
 import { useStore } from '../../app/stores/store';
 import ProfileCard from './ProfileCard';
 
 import { observer } from 'mobx-react-lite';
-import { Card, Grid, Header, Tab } from 'semantic-ui-react';
+import { Card, Grid, Header, SemanticWIDTHS, Tab } from 'semantic-ui-react';
 
 export default observer(function ProfileFollowings() {
     const { profileStore } = useStore();
-    const { profile, followings, loadingFollowings, activeTab } = profileStore;
+    const {
+        profile,
+        followings,
+        loadingFollowings,
+        activeTab,
+        profileContentFollowingsSize,
+        profileContentFollowingsSizeLoaded,
+        setProfileContentFollowingsComponentSize,
+    } = profileStore;
+
+    useEffect(() => {
+        if (!profileContentFollowingsSizeLoaded) {
+            setProfileContentFollowingsComponentSize();
+        }
+    }, [profileContentFollowingsSizeLoaded, setProfileContentFollowingsComponentSize]);
 
     return (
         <Tab.Pane loading={loadingFollowings}>
@@ -15,11 +30,15 @@ export default observer(function ProfileFollowings() {
                     <Header
                         floated="left"
                         icon="user"
-                        content={activeTab === 3 ? `People following ${profile?.displayName}` : `People ${profile?.displayName} is following`}
+                        content={
+                            activeTab === 3
+                                ? `People following ${profile?.displayName}`
+                                : `People ${profile?.displayName} is following`
+                        }
                     />
                 </Grid.Column>
                 <Grid.Column width={16}>
-                    <Card.Group itemsPerRow={4}>
+                    <Card.Group itemsPerRow={profileContentFollowingsSize.cardGroupItemsPerRow as SemanticWIDTHS}>
                         {followings.map((profile) => (
                             <ProfileCard key={profile.username} profile={profile} />
                         ))}
