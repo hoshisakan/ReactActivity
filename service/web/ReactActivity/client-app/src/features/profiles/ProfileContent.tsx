@@ -6,13 +6,17 @@ import ProfileEdit from './ProfileEdit';
 import ProfileActivities from './ProfileActivities';
 
 import { Tab } from 'semantic-ui-react';
+import { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
 
 interface Props {
     profile: Profile;
 }
 
-export default function ProfileContent({ profile }: Props) {
+export default observer(function ProfileContent({ profile }: Props) {
     const { profileStore } = useStore();
+    const { profileContentTabStyleLoaded, profileContentTabStyle, setProfileContentTabStyleComponentSize } =
+        profileStore;
 
     const panes = [
         { menuItem: 'About', render: () => <ProfileEdit /> },
@@ -22,12 +26,18 @@ export default function ProfileContent({ profile }: Props) {
         { menuItem: 'Following', render: () => <ProfileFollowings /> },
     ];
 
+    useEffect(() => {
+        if (!profileContentTabStyleLoaded) {
+            setProfileContentTabStyleComponentSize();
+        }
+    }, [profileContentTabStyleLoaded, setProfileContentTabStyleComponentSize]);
+
     return (
         <Tab
-            menu={{ fluid: true, vertical: true }}
-            menuPosition="right"
+            menu={{ fluid: profileContentTabStyle.fluid, vertical: profileContentTabStyle.vertical }}
+            menuPosition={profileContentTabStyle.menuPosition as any}
             panes={panes}
             onTabChange={(e, data) => profileStore.setActiveTab(data.activeIndex)}
         />
     );
-}
+});

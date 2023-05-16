@@ -1,16 +1,27 @@
 import { useStore } from '../../app/stores/store';
 import ProfileAbout from './ProfileEditForm';
 
-import {  useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Grid, Header, Tab } from 'semantic-ui-react';
+import { observer } from 'mobx-react-lite';
 
-export default function ProfileEdit() {
+//TODO: Add observer for auto refresh when data change
+export default observer(function ProfileEdit() {
+    const { profileStore } = useStore();
     const {
-        profileStore, commonStore
-    } = useStore();
-    const { profile, isCurrentUser } = profileStore;
-    const { detectedMobileDevice } = commonStore;
+        profile,
+        isCurrentUser,
+        profileEditPageStyleLoaded,
+        profileEditPageStyle,
+        setProfileEditPageStyleComponentSize,
+    } = profileStore;
     const [editMode, setEditMode] = useState(false);
+
+    useEffect(() => {
+        if (!profileEditPageStyleLoaded) {
+            setProfileEditPageStyleComponentSize();
+        }
+    }, [profileEditPageStyleLoaded, setProfileEditPageStyleComponentSize]);
 
     return (
         <Tab.Pane>
@@ -19,7 +30,7 @@ export default function ProfileEdit() {
                     <Header floated="left" icon="user" content={`About ${profile?.displayName}`} />
                     {isCurrentUser && (
                         <Button
-                            floated={detectedMobileDevice ? 'left' : 'right'}
+                            floated={profileEditPageStyle.buttonFloated as 'left' | 'right'}
                             basic
                             content={editMode ? 'Cancel' : 'Edit Profile'}
                             onClick={() => setEditMode(!editMode)}
@@ -36,4 +47,4 @@ export default function ProfileEdit() {
             </Grid>
         </Tab.Pane>
     );
-}
+});

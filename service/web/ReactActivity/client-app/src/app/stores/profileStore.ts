@@ -19,6 +19,10 @@ export default class ProfileStore {
         featuresWidth: 4,
     };
     profileHeaderSizeLoaded = false;
+    profileEditPageStyle = {
+        buttonFloated: 'right',
+    };
+    profileEditPageStyleLoaded = false;
     profileContentFollowingsSize = {
         cardGroupItemsPerRow: 4,
     };
@@ -37,6 +41,13 @@ export default class ProfileStore {
         previewPhotoCardGroupColumnWidth: 4,
     };
     profileContentPhotoUploadWidgetsSizeLoaded = false;
+    profileContentTabStyle = {
+        fluid: true,
+        vertical: true,
+        menuPosition: 'right',
+    };
+
+    profileContentTabStyleLoaded = false;
 
     constructor() {
         makeAutoObservable(this);
@@ -227,6 +238,16 @@ export default class ProfileStore {
         this.profileHeaderSizeLoaded = true;
     };
 
+    setProfileEditPageStyleComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileEditPageStyle.buttonFloated = 'right';
+        } else {
+            this.profileEditPageStyle.buttonFloated = 'left';
+        }
+        this.profileEditPageStyleLoaded = true;
+    };
+
     setProfileContentFollowingsComponentSize = () => {
         const detectedMobileDevice = store.commonStore.detectedMobileDevice;
         if (!detectedMobileDevice) {
@@ -263,13 +284,25 @@ export default class ProfileStore {
             this.profileContentPhotoUploadWidgetsSize.dropzoneCardGroupColumnWidth = 4;
             this.profileContentPhotoUploadWidgetsSize.cropPhotoCardGroupColumnWidth = 4;
             this.profileContentPhotoUploadWidgetsSize.previewPhotoCardGroupColumnWidth = 4;
-
         } else {
             this.profileContentPhotoUploadWidgetsSize.dropzoneCardGroupColumnWidth = 14;
             this.profileContentPhotoUploadWidgetsSize.cropPhotoCardGroupColumnWidth = 14;
             this.profileContentPhotoUploadWidgetsSize.previewPhotoCardGroupColumnWidth = 14;
         }
         this.profileContentPhotoUploadWidgetsSizeLoaded = true;
-        // alert(this.profileContentPhotoUploadWidgetsSize.cardGroupColumnWidth);
+    };
+
+    setProfileContentTabStyleComponentSize = () => {
+        const detectedMobileDevice = store.commonStore.detectedMobileDevice;
+        if (!detectedMobileDevice) {
+            this.profileContentTabStyle.fluid = true;
+            this.profileContentTabStyle.vertical = true;
+            this.profileContentTabStyle.menuPosition = 'right';
+        } else {
+            this.profileContentTabStyle.fluid = false;
+            this.profileContentTabStyle.vertical = true;
+            this.profileContentTabStyle.menuPosition = 'left';
+        }
+        this.profileContentTabStyleLoaded = true;
     };
 }
