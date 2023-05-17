@@ -1,7 +1,7 @@
 import { useStore } from '../stores/store';
 
 import { Link, NavLink } from 'react-router-dom';
-import { Button, Container, Menu, Image, Dropdown } from 'semantic-ui-react';
+import { Container, Menu, Image, Dropdown } from 'semantic-ui-react';
 import { observer } from 'mobx-react-lite';
 
 export default observer(function NavBarForMobile() {
@@ -18,7 +18,12 @@ export default observer(function NavBarForMobile() {
                 <Menu.Item as={NavLink} to="/activities" name="Activities" />
                 {/* <Menu.Item as={NavLink} to="/errors" name="Errors" /> */}
                 <Menu.Item position="right">
-                    <Image src={user?.image || '/assets/user.png'} avatar />
+                    <Image
+                        as={Link}
+                        to={`/profiles/${user?.username}`}
+                        src={user?.image || '/assets/user.png'}
+                        avatar
+                    />
                 </Menu.Item>
                 <Menu.Menu position="right">
                     <Dropdown item text={user?.displayName}>
