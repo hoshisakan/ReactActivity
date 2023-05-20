@@ -604,6 +604,7 @@ namespace API.Controllers
         {
             //TODO: Not working, need to fix.
             // string origin = Request.Headers["origin"];
+            //TODO: Use config file to set origin.
             string origin = _config.GetSection("ClientAppSettings:Origin").Get<string>() ?? string.Empty;
             string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
