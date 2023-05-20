@@ -3,14 +3,16 @@ using API.Services;
 using Application.Core;
 using Application.RefreshTokens;
 using Domain;
-
+using Infrastructure.Email;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 namespace API.Controllers
@@ -26,11 +28,14 @@ namespace API.Controllers
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
         private readonly ILogger<AppUser> _logger;
+        private readonly EmailSender _emailSender;
 
 
         public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager,
-            TokenService tokenService, IDistributedCache cache, IConfiguration config, ILogger<AppUser> logger)
+            TokenService tokenService, IDistributedCache cache, IConfiguration config, ILogger<AppUser> logger,
+            EmailSender emailSender)
         {
+            _emailSender = emailSender;
             _signInManager = signInManager;
             _userManager = userManager;
             _tokenService = tokenService;
@@ -57,8 +62,15 @@ namespace API.Controllers
 
             if (user == null)
             {
-                _logger.LogInformation("User not found.");
+                // _logger.LogInformation("User not found.");
+                _logger.LogInformation("Invalid email.");
                 return Unauthorized();
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                _logger.LogInformation("Email not confirmed.");
+                return Unauthorized("Email not confirmed.");
             }
 
             Microsoft.AspNetCore.Identity.SignInResult? result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
@@ -72,7 +84,7 @@ namespace API.Controllers
                 await SetRefreshToken(user);
                 return userDto;
             }
-            return Unauthorized();
+            return Unauthorized("Invalid password");
         }
 
         [AllowAnonymous]
@@ -105,18 +117,86 @@ namespace API.Controllers
 
                 IdentityResult? result = await _userManager.CreateAsync(user, registerDto.Password);
 
-                if (result.Succeeded)
+                // if (result.Succeeded)
+                // {
+                //     await SetRefreshToken(user);
+                //     return await CreateUserObject(user, false);
+                // }
+                // return BadRequest(result.Errors);
+
+                if (!result.Succeeded)
                 {
-                    await SetRefreshToken(user);
-                    return await CreateUserObject(user, false);
+                    _logger.LogInformation("Problem registering user.");
+                    return BadRequest("Problem registering user.");
                 }
-                return BadRequest(result.Errors);
+
+                string origin = Request.Headers["origin"];
+                string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
+                string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>{verifyUrl}</a></p>";
+
+                await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
+
+                return Ok("Registration successful - please check your email to verify your email address.");
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
                 return BadRequest(ex.Message);
             }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verifyEmail")]
+        public async Task<IActionResult> VerifyEmail(string token, string email)
+        {
+            try {
+                AppUser? user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    return BadRequest("Invalid token.");
+                }
+
+                byte[] decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
+                string decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+
+                IdentityResult? result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+
+                if (!result.Succeeded)
+                {
+                    return BadRequest("Invalid token, Cloud not verify email address.");
+                }
+                return Ok("Email confirmed - you can now login.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("resendEmailConfirmationLink")]
+        public async Task<IActionResult> ResendEmailConfirmationLink(string email)
+        {
+            AppUser? user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid email address.");
+            }
+
+            string origin = Request.Headers["origin"];
+            string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
+            string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>{verifyUrl}</a></p>";
+
+            await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
+
+            return Ok("Email verification link resent.");
         }
 
         [Authorize]

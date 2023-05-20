@@ -228,7 +228,7 @@ export default class ActivityStore {
                     this.currSelectedActivity?.attendees?.push(attendee);
                     this.currSelectedActivity!.isGoing = true;
                 }
-                console.log('this.currSelectedActivity!.isGoing: ', this.currSelectedActivity!.isGoing);
+                // console.log('this.currSelectedActivity!.isGoing: ', this.currSelectedActivity!.isGoing);
                 this.activityRegistry.set(this.currSelectedActivity!.id, this.currSelectedActivity!);
             });
         } catch (error) {
