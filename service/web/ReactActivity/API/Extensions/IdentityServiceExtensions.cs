@@ -27,9 +27,12 @@ namespace API.Extensions
             {
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.User.RequireUniqueEmail = true;
+                opt.SignIn.RequireConfirmedEmail = true;
             })
             .AddEntityFrameworkStores<DataContext>()
-            .AddSignInManager<SignInManager<AppUser>>();
+            .AddSignInManager<SignInManager<AppUser>>()
+            .AddDefaultTokenProviders()
+            ;
 
             string secretKey = config["JWTSettings:TokenKey"] ?? string.Empty;
             string issuer = config.GetSection("JWTSettings:Issuer").Get<string>() ?? string.Empty;

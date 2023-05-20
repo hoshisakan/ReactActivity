@@ -6,6 +6,9 @@ import ServerError from '../../features/errors/ServerError';
 import TestErrors from '../../features/errors/TestError';
 import ProfilePage from '../../features/profiles/ProfilePage';
 import RequireAuth from './RequireAuth';
+import RegisterSuccess from '../../features/users/RegisterSuccess';
+import ConfirmEmail from '../../features/users/ConfirmEmail';
+
 import App from '../layout/App';
 
 import { Navigate, RouteObject, createBrowserRouter } from 'react-router-dom';
@@ -25,6 +28,8 @@ export const routes: RouteObject[] = [
             ]},
             { path: 'not-found', element: <NotFound /> },
             { path: 'server-error', element: <ServerError /> },
+            { path: 'account/registerSuccess', element: <RegisterSuccess /> },
+            { path: 'account/verifyEmail', element: <ConfirmEmail /> },
             { path: '*', element: <Navigate replace to="/not-found" /> },
         ],
     },

@@ -42,6 +42,9 @@ elif [ "$1" = "Application" ]; then
     dotnet add package FluentValidation.AspNetCore --version 11.3.0
 elif [ "$1" = "Infrastructure" ]; then
     dotnet add package CloudinaryDotNet --version 1.20.0
+    dotnet add package SendGrid --version 9.28.1
+    dotnet add package MailKit --version 4.0.0
+    dotnet add package MimeKit --version 4.0.0
 else
     echo "Project or classlib $1 does not exist."
     exit 1
