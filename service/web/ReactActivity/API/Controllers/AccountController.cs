@@ -122,7 +122,7 @@ namespace API.Controllers
                     return BadRequest("Problem registering user.");
                 }
 
-                SendRegisterActivationEmail(user);
+                await SendRegisterActivationEmail(user);
 
                 return Ok("Registration successful - please check your email to verify your email address.");
             }
@@ -173,7 +173,7 @@ namespace API.Controllers
                 return BadRequest("Invalid email address.");
             }
 
-            SendRegisterActivationEmail(user);
+            await SendRegisterActivationEmail(user);
 
             return Ok("Email verification link resent.");
         }
