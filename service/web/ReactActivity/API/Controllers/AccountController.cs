@@ -62,7 +62,6 @@ namespace API.Controllers
 
             if (user == null)
             {
-                // _logger.LogInformation("User not found.");
                 _logger.LogInformation("Invalid email.");
                 return Unauthorized();
             }
@@ -117,26 +116,13 @@ namespace API.Controllers
 
                 IdentityResult? result = await _userManager.CreateAsync(user, registerDto.Password);
 
-                // if (result.Succeeded)
-                // {
-                //     await SetRefreshToken(user);
-                //     return await CreateUserObject(user, false);
-                // }
-                // return BadRequest(result.Errors);
-
                 if (!result.Succeeded)
                 {
                     _logger.LogInformation("Problem registering user.");
                     return BadRequest("Problem registering user.");
                 }
 
-                string origin = Request.Headers["origin"];
-                string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-                string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
-                string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>{verifyUrl}</a></p>";
-
-                await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
+                await SendRegisterActivationEmail(user);
 
                 return Ok("Registration successful - please check your email to verify your email address.");
             }
@@ -187,14 +173,7 @@ namespace API.Controllers
                 return BadRequest("Invalid email address.");
             }
 
-            string origin = Request.Headers["origin"];
-            string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-            string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
-            string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>{verifyUrl}</a></p>";
-
-            await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
+            await SendRegisterActivationEmail(user);
 
             return Ok("Email verification link resent.");
         }
@@ -619,6 +598,19 @@ namespace API.Controllers
             string? sessionRefreshToken = Request.Cookies["refreshToken"];
             _logger.LogInformation($"Session refresh token: {sessionRefreshToken}");
             return;
+        }
+
+        private async Task SendRegisterActivationEmail(AppUser user)
+        {
+            //TODO: Not working, need to fix.
+            // string origin = Request.Headers["origin"];
+            string origin = _config.GetSection("ClientAppSettings:Origin").Get<string>() ?? string.Empty;
+            string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
+            string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>Click to verify email</a></p>";
+
+            await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
         }
     }
 }
