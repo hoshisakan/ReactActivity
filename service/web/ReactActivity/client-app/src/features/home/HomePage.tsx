@@ -6,6 +6,7 @@ import { Container, Header, Segment, Image, Button, Divider } from 'semantic-ui-
 import { observer } from 'mobx-react-lite';
 import RegisterForm from '../users/RegisterForm';
 import FacebookLogin from '@greatsumini/react-facebook-login';
+// import ForgetPassword from '../users/ForgetPassword';
 
 export default observer(function HomePage() {
     const { userStore, modalStore } = useStore();
@@ -34,6 +35,22 @@ export default observer(function HomePage() {
                         <Button onClick={() => modalStore.openModal(<RegisterForm />)} size="huge" inverted>
                             Register!
                         </Button>
+                        <Divider hidden></Divider>
+                        <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>Forget Password?</Link>
+                        {/* <Button
+                            onClick={() => modalStore.openModal(<ForgetPassword />)}
+                            style={{
+                                textDecoration: 'underline',
+                                boxShadow: 'none',
+                                backgroundColor: 'transparent',
+                                borderBottom: 'none',
+                                position: 'relative',
+                            }}
+                            size="small"
+                            inverted
+                        >
+                            Forget Password?
+                        </Button> */}
                         <Divider horizontal inverted>
                             Or
                         </Divider>

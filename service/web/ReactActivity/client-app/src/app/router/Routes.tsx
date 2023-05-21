@@ -7,11 +7,16 @@ import TestErrors from '../../features/errors/TestError';
 import ProfilePage from '../../features/profiles/ProfilePage';
 import RequireAuth from './RequireAuth';
 import RegisterSuccess from '../../features/users/RegisterSuccess';
+import ConfirmEmail from '../../features/users/ConfirmEmail';
+import ForgetPassword from '../../features/users/ForgetPassword';
+import ApplyForgetPasswordSuccess from '../../features/users/ApplyForgetPasswordSuccess';
+import ResetPasswordSuccess from '../../features/users/ResetPasswordSuccess';
+import ResetPassword from '../../features/users/ResetPassword';
+
 
 import App from '../layout/App';
-
 import { Navigate, RouteObject, createBrowserRouter } from 'react-router-dom';
-import ConfirmEmail from '../../features/users/ConfirmEmail';
+
 
 export const routes: RouteObject[] = [
     {
@@ -30,6 +35,10 @@ export const routes: RouteObject[] = [
             { path: 'server-error', element: <ServerError /> },
             { path: 'account/registerSuccess', element: <RegisterSuccess /> },
             { path: 'account/verifyEmail', element: <ConfirmEmail /> },
+            { path: 'account/forgetPassword', element: <ForgetPassword /> },
+            { path: 'account/applyForgetPasswordSuccess', element: <ApplyForgetPasswordSuccess /> },
+            { path: 'account/resetPasswordSuccess', element: <ResetPasswordSuccess /> },
+            { path: 'account/resetPassword', element: <ResetPassword /> },
             { path: '*', element: <Navigate replace to="/not-found" /> },
         ],
     },

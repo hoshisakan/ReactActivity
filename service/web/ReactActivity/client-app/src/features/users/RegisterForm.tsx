@@ -1,11 +1,11 @@
 import MyTextInput from '../../app/common/form/MyTextInput';
 import { useStore } from '../../app/stores/store';
+import ValidationError from '../errors/ValidationError';
 
 import { ErrorMessage, Form, Formik } from 'formik';
 import { Button, Header } from 'semantic-ui-react';
 import { observer } from 'mobx-react-lite';
 import * as Yup from 'yup';
-import ValidationError from '../errors/ValidationError';
 
 
 export default observer(function RegisterForm() {

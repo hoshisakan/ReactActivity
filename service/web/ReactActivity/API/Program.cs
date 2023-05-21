@@ -8,7 +8,7 @@ using Serilog;
 using Serilog.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.Extensions.DependencyInjection;
+
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -64,7 +64,8 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
+        // app.UseSwaggerUI();
     }
 
     string policyName = builder.Configuration.GetSection("CorsSettings:PolicyName").Get<string>() ?? string.Empty;

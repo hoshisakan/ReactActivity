@@ -5,11 +5,26 @@ export interface User {
     image?: string;
 }
 
-export interface UserFormValues {
+export interface UserFormValuesLogin {
+    email: string;
+    password: string;
+}
+
+export interface UserFormValuesRegister {
     email: string;
     password: string;
     displayName?: string;
     username?: string;
+}
+
+export interface UserFormValuesForgetPassword {
+    email: string;
+}
+
+export interface UserFormValuesResetPassword {
+    email: string;
+    token: string;
+    password: string;
 }
 
 export interface UserLogout {

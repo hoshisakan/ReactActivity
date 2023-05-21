@@ -1,6 +1,13 @@
 import agent from '../api/agent';
 import { store } from './store';
-import { User, UserFormValues, UserLogout } from '../models/user';
+import {
+    User,
+    UserFormValuesForgetPassword,
+    UserFormValuesLogin,
+    UserFormValuesRegister,
+    UserFormValuesResetPassword,
+    UserLogout,
+} from '../models/user';
 import { router } from '../router/Routes';
 import { Buffer } from 'buffer';
 import { makeAutoObservable, runInAction } from 'mobx';
@@ -19,7 +26,7 @@ export default class userStore {
         return !!this.user;
     }
 
-    login = async (requestValues: UserFormValues) => {
+    login = async (requestValues: UserFormValuesLogin) => {
         try {
             const user = await agent.Account.login(requestValues);
             store.commonStore.setToken(user.token);
@@ -32,7 +39,7 @@ export default class userStore {
         }
     };
 
-    register = async (requestValues: UserFormValues) => {
+    register = async (requestValues: UserFormValuesRegister) => {
         try {
             await agent.Account.register(requestValues);
             router.navigate(`/account/registerSuccess?email=${requestValues.email}`);
@@ -43,6 +50,38 @@ export default class userStore {
             }
             store.modalStore.closeModal();
             console.log(500);
+        }
+    };
+
+    forgetPassword = async (requestValues: UserFormValuesForgetPassword) => {
+        try {
+            console.log(requestValues);
+            await agent.Account.forgetPassword(requestValues);
+            router.navigate(`/account/applyForgetPasswordSuccess?email=${requestValues?.email}`);
+            console.log('success');
+            // store.modalStore.closeModal();
+        } catch (error: any) {
+            if (error?.response?.status === 400) {
+                throw error;
+            }
+            // store.modalStore.closeModal();
+            // console.log(500);
+            console.log(error);
+        }
+    };
+
+    resetPassword = async (requestValues: UserFormValuesResetPassword) => {
+        try {
+            await agent.Account.resetPassword(requestValues);
+            router.navigate(`/account/resetPasswordSuccess?email=${requestValues?.email}`);
+            // store.modalStore.closeModal();
+        } catch (error: any) {
+            if (error?.response?.status === 400) {
+                throw error;
+            }
+            // store.modalStore.closeModal();
+            // console.log(500);
+            console.log(error);
         }
     };
 
@@ -63,9 +102,7 @@ export default class userStore {
             runInAction(() => {
                 if (response.isLogout) {
                     this.allowLogout = true;
-                }
-                else
-                {
+                } else {
                     this.allowLogout = false;
                 }
                 this.user = null;

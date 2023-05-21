@@ -3,10 +3,16 @@ import { useStore } from '../../app/stores/store';
 
 import { ErrorMessage, Form, Formik } from 'formik';
 import { Button, Header, Label } from 'semantic-ui-react';
+import * as Yup from 'yup';
 import { observer } from 'mobx-react-lite';
+
 
 export default observer(function LoginForm() {
     const { userStore } = useStore();
+    const validationSchema = Yup.object({
+        email: Yup.string().required().email(),
+        password: Yup.string().required(),
+    });
 
     return (
         <Formik
@@ -14,6 +20,7 @@ export default observer(function LoginForm() {
             onSubmit={(values, { setErrors }) =>
                 userStore.login(values).catch((error) => setErrors({ error: error.response.data }))
             }
+            validationSchema={validationSchema}
         >
             {({ handleSubmit, isSubmitting, errors }) => (
                 <Form className="ui form" onSubmit={handleSubmit} autoComplete="off">

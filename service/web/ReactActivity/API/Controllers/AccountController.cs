@@ -122,7 +122,7 @@ namespace API.Controllers
                     return BadRequest("Problem registering user.");
                 }
 
-                await SendRegisterActivationEmail(user);
+                await SendVerifyEmail(user, "register");
 
                 return Ok("Registration successful - please check your email to verify your email address.");
             }
@@ -141,7 +141,7 @@ namespace API.Controllers
                 AppUser? user = await _userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    return BadRequest("Invalid token.");
+                    return BadRequest("Invalid email address.");
                 }
 
                 byte[] decodedTokenBytes = WebEncoders.Base64UrlDecode(token);
@@ -173,9 +173,73 @@ namespace API.Controllers
                 return BadRequest("Invalid email address.");
             }
 
-            await SendRegisterActivationEmail(user);
+            await SendVerifyEmail(user, "register");
 
             return Ok("Email verification link resent.");
+        }
+
+        // [AllowAnonymous]
+        // [HttpGet("forgotPassword")]
+        // public async Task<IActionResult> ForgotPassword(string email)
+        // {
+        //     AppUser? user = await _userManager.FindByEmailAsync(email);
+
+        //     if (user == null)
+        //     {
+        //         return BadRequest("Invalid email address.");
+        //     }
+
+        //     await SendVerifyEmail(user, "forgotPassword");
+
+        //     return Ok("Password reset link sent.");
+        // }
+
+        [AllowAnonymous]
+        [HttpPost("forgotPassword")]
+        public async Task<IActionResult> ForgotPassword(ForgetPasswordDto forgetPasswordDto)
+        {
+            _logger.LogInformation($"email: {forgetPasswordDto.Email}");
+
+            AppUser? user = await _userManager.FindByEmailAsync(forgetPasswordDto.Email);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid email address.");
+            }
+
+            await SendVerifyEmail(user, "forgotPassword");
+
+            return Ok("Password reset link sent.");
+        }
+
+        [AllowAnonymous]
+        [HttpPost("resetPassword")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
+        {
+            try {
+                AppUser? user = await _userManager.FindByEmailAsync(resetPasswordDto.Email);
+
+                if (user == null)
+                {
+                    return BadRequest("Invalid email address.");
+                }
+
+                byte[] decodedTokenBytes = WebEncoders.Base64UrlDecode(resetPasswordDto.Token);
+                string decodedToken = Encoding.UTF8.GetString(decodedTokenBytes);
+
+                IdentityResult? result = await _userManager.ResetPasswordAsync(user, decodedToken, resetPasswordDto.Password);
+
+                if (!result.Succeeded)
+                {
+                    return BadRequest("Invalid token, Cloud not reset password.");
+                }
+                return Ok("Password reset successful - you can now login.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error message: {ex.Message}\nerror stack: {ex.StackTrace}");
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -416,8 +480,7 @@ namespace API.Controllers
 
                 Result<Unit>? revokedResult = await Mediator.Send(
                     new Revoke.Command {
-                        AppUserId = user.Id,
-                        // Token = refreshToken
+                        AppUserId = user.Id
                     }
                 );
                 return HandleResult(revokedResult);
@@ -600,17 +663,62 @@ namespace API.Controllers
             return;
         }
 
-        private async Task SendRegisterActivationEmail(AppUser user)
+        private async Task SendVerifyEmail(AppUser user, string mode)
         {
+            string token = string.Empty;
+            string verifyPage = string.Empty;
+            string verifyUrl = string.Empty;
+            string verifyUrlFirstParagraph = string.Empty;
+            string verifyUrlEndParagraph = string.Empty;
+            string message = string.Empty;
+            string subject = string.Empty;
+
             //TODO: Not working, need to fix.
             // string origin = Request.Headers["origin"];
             string origin = _config.GetSection("ClientAppSettings:Origin").Get<string>() ?? string.Empty;
-            string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            string verifyUrl = $"{origin}/account/verifyEmail?token={token}&email={user.Email}";
-            string message = $"<p>Please click the below link to verify your email address:</p><p><a href='{verifyUrl}'>Click to verify email</a></p>";
+            
 
-            await _emailSender.SendEmailAsync(user.Email, "Please verify email address", message);
+            switch (mode)
+            {
+                case "register":
+                    token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    verifyPage = "verifyEmail";
+                    verifyUrlFirstParagraph = "<p>Please click the below link to verify your email address:</p><p><a href='";
+                    verifyUrlEndParagraph = "'>Click to verify email</a></p>";
+                    subject = "Confirm Email Address";
+                    break;
+                case "forgotPassword":
+                    token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    verifyPage = "resetPassword";
+                    verifyUrlFirstParagraph = "<p>Please click the below link to reset your password:</p><p><a href='";
+                    verifyUrlEndParagraph = "'>Click to reset password</a></p>";
+                    subject = "Reset Password Email";
+                    break;
+                default:
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogInformation($"Token is null.");
+                return;
+            }
+
+            _logger.LogInformation($"raw token: {token}");
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            _logger.LogInformation($"encrypt token: {token}");
+
+            verifyUrl = $"{origin}/account/{verifyPage}?token={token}&email={user.Email}";
+            message = $"{verifyUrlFirstParagraph}{verifyUrl}{verifyUrlEndParagraph}";
+
+            _logger.LogInformation($"mode: {mode}");
+            _logger.LogInformation($"user.UserName: {user.UserName}");
+            _logger.LogInformation($"user.Email: {user.Email}");
+            _logger.LogInformation($"origin: {origin}");
+            _logger.LogInformation($"message: {message}");
+            _logger.LogInformation($"token: {token}");
+            _logger.LogInformation($"verifyUrl: {verifyUrl}");
+            await _emailSender.SendEmailAsync(user.Email, subject, message);
         }
     }
 }
