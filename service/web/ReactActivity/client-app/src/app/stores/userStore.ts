@@ -176,7 +176,7 @@ export default class userStore {
             // console.log(timeout);
             //TODO: Set timeout to 30 seconds before token expires
             this.refreshTokenTimeout = setTimeout(this.refreshToken, timeout);
-            console.log(this.refreshTokenTimeout);
+            // console.log(this.refreshTokenTimeout);
         } catch (error) {
             console.log(error);
         }

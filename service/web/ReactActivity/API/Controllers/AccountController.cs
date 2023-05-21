@@ -63,7 +63,7 @@ namespace API.Controllers
             if (user == null)
             {
                 _logger.LogInformation("Invalid email.");
-                return Unauthorized();
+                return Unauthorized("Invalid email.");
             }
 
             if (!user.EmailConfirmed)
@@ -177,22 +177,6 @@ namespace API.Controllers
 
             return Ok("Email verification link resent.");
         }
-
-        // [AllowAnonymous]
-        // [HttpGet("forgotPassword")]
-        // public async Task<IActionResult> ForgotPassword(string email)
-        // {
-        //     AppUser? user = await _userManager.FindByEmailAsync(email);
-
-        //     if (user == null)
-        //     {
-        //         return BadRequest("Invalid email address.");
-        //     }
-
-        //     await SendVerifyEmail(user, "forgotPassword");
-
-        //     return Ok("Password reset link sent.");
-        // }
 
         [AllowAnonymous]
         [HttpPost("forgotPassword")]

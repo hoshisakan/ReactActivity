@@ -37,20 +37,6 @@ export default observer(function HomePage() {
                         </Button>
                         <Divider hidden></Divider>
                         <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>Forget Password?</Link>
-                        {/* <Button
-                            onClick={() => modalStore.openModal(<ForgetPassword />)}
-                            style={{
-                                textDecoration: 'underline',
-                                boxShadow: 'none',
-                                backgroundColor: 'transparent',
-                                borderBottom: 'none',
-                                position: 'relative',
-                            }}
-                            size="small"
-                            inverted
-                        >
-                            Forget Password?
-                        </Button> */}
                         <Divider horizontal inverted>
                             Or
                         </Divider>
