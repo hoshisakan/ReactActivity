@@ -37,10 +37,10 @@ export default observer(function HomePage() {
                         </Button>
                         <Divider hidden></Divider>
                         <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>Forget Password?</Link>
-                        <Divider horizontal inverted>
+                        {/* <Divider horizontal inverted>
                             Or
-                        </Divider>
-                        <Button
+                        </Divider> */}
+                        {/* <Button
                             as={FacebookLogin}
                             appId={process.env.REACT_APP_FACEBOOK_APP_ID!}
                             size="huge"
@@ -55,7 +55,7 @@ export default observer(function HomePage() {
                             onFail={(error: any) => {
                                 console.log('Login fail', error);
                             }}
-                        />
+                        /> */}
                     </>
                 )}
             </Container>
