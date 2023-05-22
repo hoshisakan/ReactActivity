@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite';
 import RegisterForm from '../users/RegisterForm';
 import FacebookLogin from '@greatsumini/react-facebook-login';
 
+
 export default observer(function HomePage() {
     const { userStore, modalStore } = useStore();
 
@@ -34,6 +35,8 @@ export default observer(function HomePage() {
                         <Button onClick={() => modalStore.openModal(<RegisterForm />)} size="huge" inverted>
                             Register!
                         </Button>
+                        <Divider hidden></Divider>
+                        <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>Forget Password?</Link>
                         <Divider horizontal inverted>
                             Or
                         </Divider>

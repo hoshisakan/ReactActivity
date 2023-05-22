@@ -1,5 +1,5 @@
 import { Activity, ActivityFormValues } from '../models/activity';
-import { User, UserFormValues, UserLogout } from '../models/user';
+import { User, UserFormValuesForgetPassword, UserFormValuesLogin, UserFormValuesResetPassword, UserLogout } from '../models/user';
 import { Photo, Profile, UserActivity } from '../models/profile';
 import { store } from '../stores/store';
 import { router } from '../router/Routes';
@@ -99,8 +99,8 @@ const Activities = {
 
 const Account = {
     current: () => requests.get<User>('/account'),
-    login: (user: UserFormValues) => requests.post<User>(`/account/login`, user),
-    register: (user: UserFormValues) => requests.post<User>(`/account/register`, user),
+    login: (user: UserFormValuesLogin) => requests.post<User>(`/account/login`, user),
+    register: (user: UserFormValuesLogin) => requests.post<User>(`/account/register`, user),
     fbLogin: (accessToken: string) => requests
         .post<User>(`/account/fbLogin?accessToken=${accessToken}`, {}),
     refreshToken: () => requests.post<User>('/account/refresh-token', {}),
@@ -108,7 +108,9 @@ const Account = {
     verifyEmail: (token: string, email: string) =>
         requests.post<void>(`/account/verifyEmail?token=${token}&email=${email}`, {}),
     resendEmailConfirm: (email: string) =>
-        requests.get<void>(`/account/resendEmailConfirmationLink?email=${email}`)
+        requests.get<void>(`/account/resendEmailConfirmationLink?email=${email}`),
+    forgetPassword: (user: UserFormValuesForgetPassword) => requests.post<void>(`/account/forgotPassword`, user),
+    resetPassword: (user: UserFormValuesResetPassword) => requests.post<void>(`/account/resetPassword`, user),
 };
 
 const Profiles = {
