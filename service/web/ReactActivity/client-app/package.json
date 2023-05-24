@@ -4,6 +4,7 @@
     "private": true,
     "dependencies": {
         "@greatsumini/react-facebook-login": "^3.3.3",
+        "@leecheuk/react-google-login": "^5.4.1",
         "@microsoft/signalr": "^7.0.5",
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^13.4.0",
@@ -17,6 +18,7 @@
         "buffer": "^6.0.3",
         "date-fns": "^2.29.3",
         "formik": "^2.2.9",
+        "gapi-script": "^1.2.0",
         "mobx": "^6.9.0",
         "mobx-react-lite": "^3.4.3",
         "react": "^18.2.0",

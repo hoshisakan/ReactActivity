@@ -15,6 +15,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 export default class userStore {
     user: User | null = null;
     fbLoading = false;
+    googleLoading = false;
     refreshTokenTimeout: any;
     allowLogout = false;
 
@@ -148,6 +149,23 @@ export default class userStore {
         } catch (error) {
             console.log(error);
             runInAction(() => (this.fbLoading = false));
+        }
+    };
+
+    googleLogin = async (accessToken: string) => {
+        try {
+            this.googleLoading = true;
+            const user = await agent.Account.googleLogin(accessToken);
+            store.commonStore.setToken(user.token);
+            this.startRefreshTokenTimer(user);
+            runInAction(() => {
+                this.user = user;
+                this.googleLoading = false;
+            });
+            router.navigate('/activities');
+        } catch (error) {
+            console.log(error);
+            runInAction(() => (this.googleLoading = false));
         }
     };
 
