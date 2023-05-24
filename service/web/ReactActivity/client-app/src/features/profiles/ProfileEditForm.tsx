@@ -21,7 +21,7 @@ export default observer(function ProfileEditForm({ setEditMode }: Props) {
     });
     const initialValues = {
         displayName: profile?.displayName,
-        bio: profile?.bio
+        bio: profile?.bio,
     };
 
     function handleFormSubmit(values: Partial<Profile>) {

@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { Card, Grid, Header, Tab, TabProps, Image, SemanticWIDTHS, Dropdown } from 'semantic-ui-react';
 import { format } from 'date-fns';
 
-
 export default observer(function ProfileActivities() {
     const { profileStore, commonStore } = useStore();
     const {
