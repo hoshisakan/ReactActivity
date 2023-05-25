@@ -70,7 +70,7 @@ export default observer(function HomePage() {
                         <Divider hidden></Divider>
                         <Button
                             as={GoogleLogin}
-                            clientId={'349490940366-h1vjejb19fbv5qdg1critkud172df4rn.apps.googleusercontent.com'}
+                            clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID!}
                             size="huge"
                             inverted
                             color="google plus"
