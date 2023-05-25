@@ -1,15 +1,22 @@
 import { useStore } from '../../app/stores/store';
 import LoginForm from '../users/LoginForm';
+import RegisterForm from '../users/RegisterForm';
 
 import { Link } from 'react-router-dom';
 import { Container, Header, Segment, Image, Button, Divider } from 'semantic-ui-react';
 import { observer } from 'mobx-react-lite';
-import RegisterForm from '../users/RegisterForm';
-import FacebookLogin from '@greatsumini/react-facebook-login';
-
+import { GoogleLogin } from '@leecheuk/react-google-login';
+import { gapi } from 'gapi-script';
 
 export default observer(function HomePage() {
     const { userStore, modalStore } = useStore();
+
+    gapi.load('client:auth2', () => {
+        gapi.client.init({
+            clientId: 'your client id will be display here',
+            plugin_name: 'chat',
+        });
+    });
 
     return (
         <Segment inverted textAlign="center" vertical className="masthead">
@@ -36,26 +43,30 @@ export default observer(function HomePage() {
                             Register!
                         </Button>
                         <Divider hidden></Divider>
-                        <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>Forget Password?</Link>
-                        {/* <Divider horizontal inverted>
+                        <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>
+                            Forget Password?
+                        </Link>
+                        <Divider horizontal inverted>
                             Or
-                        </Divider> */}
-                        {/* <Button
-                            as={FacebookLogin}
-                            appId={process.env.REACT_APP_FACEBOOK_APP_ID!}
+                        </Divider>
+                        <Button
+                            as={GoogleLogin}
+                            clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID!}
                             size="huge"
                             inverted
-                            color="facebook"
-                            content="Login with Facebook"
-                            loading={userStore.fbLoading}
+                            color="google plus"
+                            content="Login with Google"
+                            loading={userStore.googleLoading}
                             onSuccess={(response: any) => {
                                 // console.log('Login success', response);
-                                userStore.facebookLogin(response.accessToken);
+                                // console.log('Login success', response.accessToken);
+                                userStore.googleLogin(response.accessToken);
                             }}
                             onFail={(error: any) => {
-                                console.log('Login fail', error);
+                                // console.log('Login fail', error);
+                                console.log(error);
                             }}
-                        /> */}
+                        />
                     </>
                 )}
             </Container>

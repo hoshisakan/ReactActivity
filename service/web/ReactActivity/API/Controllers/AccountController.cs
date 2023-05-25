@@ -26,9 +26,10 @@ namespace API.Controllers
         private readonly TokenService _tokenService;
         private readonly IDistributedCache _cache;
         private readonly IConfiguration _config;
-        private readonly HttpClient _httpClient;
         private readonly ILogger<AppUser> _logger;
         private readonly EmailSender _emailSender;
+        private string _baseAddress;
+        private HttpClient _httpClient = new HttpClient();
 
 
         public AccountController(SignInManager<AppUser> signInManager, UserManager<AppUser> userManager,
@@ -42,14 +43,6 @@ namespace API.Controllers
             _cache = cache;
             _config = config;
             string baseAddress = _config["API:BaseAddress"] ?? string.Empty;
-            if (string.IsNullOrEmpty(baseAddress))
-            {
-                throw new Exception("API:BaseAddress is not set.");
-            }
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri(baseAddress)
-            };
             _logger = logger;
         }
 
@@ -245,11 +238,16 @@ namespace API.Controllers
         [HttpPost("fbLogin")]
         public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken)
         {
+            _baseAddress = _config["API:Facebook:BaseAddress"] ?? throw new ArgumentNullException("Facebook API base address is null.");
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(_baseAddress)
+            };
             string fbVerifyKeys = _config["Facebook:AppId"] + "|" + _config["Facebook:ApiSecret"];
             HttpResponseMessage? verifyToken = await _httpClient.GetAsync($"debug_token?input_token={accessToken}&access_token={fbVerifyKeys}");
             if (!verifyToken.IsSuccessStatusCode) // Not equal to 200
             {
-                return Unauthorized();
+                return Unauthorized("Invalid facebook token.");
             }
 
             string fbUrl = $"me?access_token={accessToken}&fields=name,email,picture.width(100).height(100)";
@@ -257,7 +255,7 @@ namespace API.Controllers
             
             if (fbInfo == null)
             {
-                return Unauthorized();
+                return Unauthorized("Problem authenticating with facebook.");
             }
 
             AppUser? user = await _userManager.Users.Include(p => p.Photos)
@@ -282,6 +280,69 @@ namespace API.Controllers
                     {
                         Id = "fb_" + fbInfo.Id,
                         Url = fbInfo.Picture.Data.Url,
+                        IsMain = true
+                    }
+                }
+            };
+
+            IdentityResult? result = await _userManager.CreateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogInformation("Problem creating user account.");
+                return BadRequest("Problem creating user account.");
+            }
+            _logger.LogInformation($"username: {user.UserName} created, creating new token.");
+            await SetRefreshToken(user);
+
+            return await CreateUserObject(user, false);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("googleLogin")]
+        public async Task<ActionResult<UserDto>> GoogleLogin(string accessToken)
+        {
+            _baseAddress = _config["API:Google:BaseAddress"] ?? throw new ArgumentNullException("Google API base address is null.");
+            _httpClient = new HttpClient
+            {
+                BaseAddress = new Uri(_baseAddress)
+            };
+            HttpResponseMessage? verifyToken = await _httpClient.GetAsync($"tokeninfo?access_token={accessToken}");
+            if (!verifyToken.IsSuccessStatusCode) // Not equal to 200
+            {
+                return Unauthorized("Invalid google token.");
+            }
+
+            string googleInfoUrl = $"userinfo?access_token={accessToken}";
+            GoogleDto? googleInfo = await _httpClient.GetFromJsonAsync<GoogleDto>(googleInfoUrl);
+            
+            if (googleInfo == null)
+            {
+                return Unauthorized("Problem authenticating with google.");
+            }
+
+            AppUser? user = await _userManager.Users.Include(p => p.Photos)
+                .FirstOrDefaultAsync(x => x.Email == googleInfo.Email);
+
+            if (user != null)
+            {
+                _logger.LogInformation($"username: {user.UserName} already exists, creating new token.");
+                await SetRefreshToken(user);
+                return await CreateUserObject(user, true);
+            }
+
+            user = new AppUser
+            {
+                DisplayName = googleInfo.Name,
+                Email = googleInfo.Email,
+                // UserName = fbInfo.Email.Split("@")[0],
+                UserName = googleInfo.Email,
+                Photos = new List<Photo>
+                {
+                    new Photo
+                    {
+                        Id = "google_" + googleInfo.Sub,
+                        Url = googleInfo.Picture,
                         IsMain = true
                     }
                 }
