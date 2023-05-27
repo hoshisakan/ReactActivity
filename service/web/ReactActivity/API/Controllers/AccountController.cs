@@ -495,47 +495,47 @@ namespace API.Controllers
         //TODO: Need to fix this, because any user can revoke any user's token,
         //TODO: Need to check if the user is the owner of the token, or admin
         //TODO: If the user is admin, then can revoke any user's token, otherwise, only revoke his own token
-        [AllowAnonymous]
-        [HttpPost("revoke-token/{username}")]
-        public async Task<IActionResult> RevokeRefreshToken(string username)
-        {
-            try
-            {
-                string? refreshToken = Request.Cookies["refreshToken"];
-                _logger.LogInformation($"Revoke token is: {refreshToken}");
+        // [AllowAnonymous]
+        // [HttpPost("revoke-token/{username}")]
+        // public async Task<IActionResult> RevokeRefreshToken(string username)
+        // {
+        //     try
+        //     {
+        //         string? refreshToken = Request.Cookies["refreshToken"];
+        //         _logger.LogInformation($"Revoke token is: {refreshToken}");
 
-                if (string.IsNullOrEmpty(refreshToken))
-                {
-                    return BadRequest("Invalid refresh token.");
-                }
+        //         if (string.IsNullOrEmpty(refreshToken))
+        //         {
+        //             return BadRequest("Invalid refresh token.");
+        //         }
 
-                _logger.LogInformation($"Revoke token request user is: {username}");
+        //         _logger.LogInformation($"Revoke token request user is: {username}");
 
-                AppUser? user = _userManager.Users
-                    .Include(r => r.RefreshTokens)
-                    .FirstOrDefault(x => x.UserName == username)
-                ;
+        //         AppUser? user = _userManager.Users
+        //             .Include(r => r.RefreshTokens)
+        //             .FirstOrDefault(x => x.UserName == username)
+        //         ;
 
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
+        //         if (user == null)
+        //         {
+        //             return Unauthorized();
+        //         }
 
-                _logger.LogInformation($"Will starting user id: {user.Id} remove refresh token: {refreshToken}");
+        //         _logger.LogInformation($"Will starting user id: {user.Id} remove refresh token: {refreshToken}");
 
-                Result<Unit>? revokedResult = await Mediator.Send(
-                    new Revoke.Command {
-                        AppUserId = user.Id
-                    }
-                );
-                return HandleResult(revokedResult);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
-                return BadRequest(ex.Message);
-            }
-        }
+        //         Result<Unit>? revokedResult = await Mediator.Send(
+        //             new Revoke.Command {
+        //                 AppUserId = user.Id
+        //             }
+        //         );
+        //         return HandleResult(revokedResult);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
+        //         return BadRequest(ex.Message);
+        //     }
+        // }
 
         private async Task<string> GetNewAccessToken(AppUser user)
         {
