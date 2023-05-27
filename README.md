@@ -5,6 +5,7 @@
 * pgAdmin 7.1
 * Dotnet Core 7.0 through Ubuntu 22.10
 * Redis 7.0.9
+* Node.js 20.1-alpine3.16
 # Project Description
 
 ## Website structure
