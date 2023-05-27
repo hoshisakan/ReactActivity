@@ -1,9 +1,10 @@
 import { Profile } from '../../app/models/profile';
+import { useStore } from '../../app/stores/store';
 
 import { observer } from 'mobx-react-lite';
 import { Button, Reveal } from 'semantic-ui-react';
-import { useStore } from '../../app/stores/store';
 import { SyntheticEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface Props {
     profile: Profile;
@@ -12,8 +13,14 @@ interface Props {
 export default observer(function FollowButton({ profile }: Props) {
     const { profileStore, userStore } = useStore();
     const { updateFollowing, loading } = profileStore;
+    const location = useLocation();
+    const [loadProfileUserName] = location.pathname.split('/').slice(-1);
+    const [loadPageFeatureName] = location.pathname.split('/').slice(1);
 
-    if (userStore.user?.username === profile.username) {
+    if (
+        userStore.user?.username === profile.username ||
+        (loadPageFeatureName === 'profiles' && loadProfileUserName !== userStore.user?.username)
+    ) {
         return null;
     }
 

@@ -234,69 +234,69 @@ namespace API.Controllers
             return await CreateUserObject(user, true);
         }
 
-        [AllowAnonymous]
-        [HttpPost("fbLogin")]
-        public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken)
-        {
-            _baseAddress = _config["API:Facebook:BaseAddress"] ?? throw new ArgumentNullException("Facebook API base address is null.");
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri(_baseAddress)
-            };
-            string fbVerifyKeys = _config["Facebook:AppId"] + "|" + _config["Facebook:ApiSecret"];
-            HttpResponseMessage? verifyToken = await _httpClient.GetAsync($"debug_token?input_token={accessToken}&access_token={fbVerifyKeys}");
-            if (!verifyToken.IsSuccessStatusCode) // Not equal to 200
-            {
-                return Unauthorized("Invalid facebook token.");
-            }
+        // [AllowAnonymous]
+        // [HttpPost("fbLogin")]
+        // public async Task<ActionResult<UserDto>> FacebookLogin(string accessToken)
+        // {
+        //     _baseAddress = _config["API:Facebook:BaseAddress"] ?? throw new ArgumentNullException("Facebook API base address is null.");
+        //     _httpClient = new HttpClient
+        //     {
+        //         BaseAddress = new Uri(_baseAddress)
+        //     };
+        //     string fbVerifyKeys = _config["Facebook:AppId"] + "|" + _config["Facebook:ApiSecret"];
+        //     HttpResponseMessage? verifyToken = await _httpClient.GetAsync($"debug_token?input_token={accessToken}&access_token={fbVerifyKeys}");
+        //     if (!verifyToken.IsSuccessStatusCode) // Not equal to 200
+        //     {
+        //         return Unauthorized("Invalid facebook token.");
+        //     }
 
-            string fbUrl = $"me?access_token={accessToken}&fields=name,email,picture.width(100).height(100)";
-            FacebookDto? fbInfo = await _httpClient.GetFromJsonAsync<FacebookDto>(fbUrl);
+        //     string fbUrl = $"me?access_token={accessToken}&fields=name,email,picture.width(100).height(100)";
+        //     FacebookDto? fbInfo = await _httpClient.GetFromJsonAsync<FacebookDto>(fbUrl);
             
-            if (fbInfo == null)
-            {
-                return Unauthorized("Problem authenticating with facebook.");
-            }
+        //     if (fbInfo == null)
+        //     {
+        //         return Unauthorized("Problem authenticating with facebook.");
+        //     }
 
-            AppUser? user = await _userManager.Users.Include(p => p.Photos)
-                .FirstOrDefaultAsync(x => x.Email == fbInfo.Email);
+        //     AppUser? user = await _userManager.Users.Include(p => p.Photos)
+        //         .FirstOrDefaultAsync(x => x.Email == fbInfo.Email);
 
-            if (user != null)
-            {
-                _logger.LogInformation($"username: {user.UserName} already exists, creating new token.");
-                await SetRefreshToken(user);
-                return await CreateUserObject(user, true);
-            }
+        //     if (user != null)
+        //     {
+        //         _logger.LogInformation($"username: {user.UserName} already exists, creating new token.");
+        //         await SetRefreshToken(user);
+        //         return await CreateUserObject(user, true);
+        //     }
 
-            user = new AppUser
-            {
-                DisplayName = fbInfo.Name,
-                Email = fbInfo.Email,
-                // UserName = fbInfo.Email.Split("@")[0],
-                UserName = fbInfo.Email,
-                Photos = new List<Photo>
-                {
-                    new Photo
-                    {
-                        Id = "fb_" + fbInfo.Id,
-                        Url = fbInfo.Picture.Data.Url,
-                        IsMain = true
-                    }
-                }
-            };
+        //     user = new AppUser
+        //     {
+        //         DisplayName = fbInfo.Name,
+        //         Email = fbInfo.Email,
+        //         // UserName = fbInfo.Email.Split("@")[0],
+        //         UserName = fbInfo.Email,
+        //         Photos = new List<Photo>
+        //         {
+        //             new Photo
+        //             {
+        //                 Id = "fb_" + fbInfo.Id,
+        //                 Url = fbInfo.Picture.Data.Url,
+        //                 IsMain = true
+        //             }
+        //         }
+        //     };
 
-            IdentityResult? result = await _userManager.CreateAsync(user);
+        //     IdentityResult? result = await _userManager.CreateAsync(user);
 
-            if (!result.Succeeded)
-            {
-                _logger.LogInformation("Problem creating user account.");
-                return BadRequest("Problem creating user account.");
-            }
-            _logger.LogInformation($"username: {user.UserName} created, creating new token.");
-            await SetRefreshToken(user);
+        //     if (!result.Succeeded)
+        //     {
+        //         _logger.LogInformation("Problem creating user account.");
+        //         return BadRequest("Problem creating user account.");
+        //     }
+        //     _logger.LogInformation($"username: {user.UserName} created, creating new token.");
+        //     await SetRefreshToken(user);
 
-            return await CreateUserObject(user, false);
-        }
+        //     return await CreateUserObject(user, false);
+        // }
 
         [AllowAnonymous]
         [HttpPost("googleLogin")]
@@ -495,47 +495,47 @@ namespace API.Controllers
         //TODO: Need to fix this, because any user can revoke any user's token,
         //TODO: Need to check if the user is the owner of the token, or admin
         //TODO: If the user is admin, then can revoke any user's token, otherwise, only revoke his own token
-        [AllowAnonymous]
-        [HttpPost("revoke-token/{username}")]
-        public async Task<IActionResult> RevokeRefreshToken(string username)
-        {
-            try
-            {
-                string? refreshToken = Request.Cookies["refreshToken"];
-                _logger.LogInformation($"Revoke token is: {refreshToken}");
+        // [AllowAnonymous]
+        // [HttpPost("revoke-token/{username}")]
+        // public async Task<IActionResult> RevokeRefreshToken(string username)
+        // {
+        //     try
+        //     {
+        //         string? refreshToken = Request.Cookies["refreshToken"];
+        //         _logger.LogInformation($"Revoke token is: {refreshToken}");
 
-                if (string.IsNullOrEmpty(refreshToken))
-                {
-                    return BadRequest("Invalid refresh token.");
-                }
+        //         if (string.IsNullOrEmpty(refreshToken))
+        //         {
+        //             return BadRequest("Invalid refresh token.");
+        //         }
 
-                _logger.LogInformation($"Revoke token request user is: {username}");
+        //         _logger.LogInformation($"Revoke token request user is: {username}");
 
-                AppUser? user = _userManager.Users
-                    .Include(r => r.RefreshTokens)
-                    .FirstOrDefault(x => x.UserName == username)
-                ;
+        //         AppUser? user = _userManager.Users
+        //             .Include(r => r.RefreshTokens)
+        //             .FirstOrDefault(x => x.UserName == username)
+        //         ;
 
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
+        //         if (user == null)
+        //         {
+        //             return Unauthorized();
+        //         }
 
-                _logger.LogInformation($"Will starting user id: {user.Id} remove refresh token: {refreshToken}");
+        //         _logger.LogInformation($"Will starting user id: {user.Id} remove refresh token: {refreshToken}");
 
-                Result<Unit>? revokedResult = await Mediator.Send(
-                    new Revoke.Command {
-                        AppUserId = user.Id
-                    }
-                );
-                return HandleResult(revokedResult);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
-                return BadRequest(ex.Message);
-            }
-        }
+        //         Result<Unit>? revokedResult = await Mediator.Send(
+        //             new Revoke.Command {
+        //                 AppUserId = user.Id
+        //             }
+        //         );
+        //         return HandleResult(revokedResult);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError($"Message: {ex.Message}\nStackTrace: {ex.StackTrace}");
+        //         return BadRequest(ex.Message);
+        //     }
+        // }
 
         private async Task<string> GetNewAccessToken(AppUser user)
         {

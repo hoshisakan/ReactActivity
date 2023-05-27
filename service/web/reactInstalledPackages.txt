@@ -1,0 +1,25 @@
+npm install axios
+npm install semantic-ui-react semantic-ui-css
+npm install uuid
+npm i --save-dev @types/uuid
+npm install mobx mobx-react-lite
+npm install react-router-dom
+npm install react-calendar
+npm install react-toastify
+npm install formik
+npm install yup --save
+npm install react-datepicker
+npm i --save-dev @types/react-datepicker
+npm ls date-fns
+npm install date-fns@2.29.3
+npm install react-dropzone
+npm install react-cropper
+npm install react-cropper --legacy-peer-depsi (if line 16 install react-cropper occour error, then use this command)
+npm install @microsoft/signalr
+npm install react-infinite-scroller
+npm install react-infinite-scroller --legacy-peer-deps (if line 19 install react-cropper occour error, then use this command)
+npm install @types/react-infinite-scroller
+npm i --save @greatsumini/react-facebook-login
+npm install --save buffer
+npm install @leecheuk/react-google-login
+npm install gapi-script
