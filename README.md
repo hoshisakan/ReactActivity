@@ -1,4 +1,7 @@
 # ReactActivity
+## About
+Neil Cummings's Udemy Course : The complete guide to building an app use ASP.NET Core 7.0, React 18.2 (with Typescript) and Mobx, and deploy it to the cloud.
+
 ## Use Docker to build the following services
 * Nginx 1.23.3
 * PostgreSQL 15.2
@@ -6,6 +9,16 @@
 * Dotnet Core 7.0 through Ubuntu 22.10
 * Redis 7.0.9
 * Node.js 20.1-alpine3.16
+
+## Live Demo
+https://reactivities.servepics.com/
+
+* Test user account and password or your can through Google account to login
+```
+    Email: yll10229@zbock.com
+    Password: Pa$$w0rd
+```
+
 # Project Description
 
 ## Website structure
@@ -128,13 +141,6 @@
 
 ![ActivitiesByAttending](https://imgur.com/cravB6k.png)
 
-## Demo Website
-* [Demo](https://reactivities.servepics.com/)
-* Test user account and password
-```
-    Email: yll10229@zbock.com
-    Password: Pa$$w0rd
-```
 ## Data Backup Schedule
 [Backend Data Backup Schedule Extension](service/web/ReactActivity/API/Extensions/DataBackupServiceExtensions.cs)
 
