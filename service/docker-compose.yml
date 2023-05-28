@@ -2,7 +2,7 @@ version: '3.9'
 services:
     redis:
         build: ./conf/redis
-        image: hoshisakan/${PROJECT_NAME}/redis:${REDIS_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/redis:${REDIS_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_redis
         volumes:
             - ./data/redis:/data
@@ -25,7 +25,7 @@ services:
                 - NGINX_LANG_INPUTFILE=${NGINX_LANG_INPUTFILE}
                 - NGINX_LANG_CHARMAP=${NGINX_LANG_CHARMAP}
                 - DEBIAN_FRONTEND=${NGINX_DEBIAN_FRONTEND}
-        image: hoshisakan/${PROJECT_NAME}/nginx:${NGINX_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/nginx:${NGINX_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_nginx
         env_file:
           - ./.env
@@ -58,7 +58,7 @@ services:
             dockerfile: Dockerfile
             args:
                 - NODEJS_ENV=${NODEJS_ENV}
-        image: hoshisakan/${PROJECT_NAME}/nodejs:${NODEJS_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/nodejs:${NODEJS_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_frontend
         volumes:
             - ./web:/app
@@ -87,7 +87,7 @@ services:
                 - DOTNET_POSTGRESQL_CLIENT_VERSION=${DOTNET_POSTGRESQL_CLIENT_VERSION}
                 - POSTGRES_DATA_BACKUP_PATH=:${POSTGRES_DATA_BACKUP_PATH}
                 - DOTNET_PACKAGES_PATH=${DOTNET_PACKAGES_PATH}
-        image: hoshisakan/${PROJECT_NAME}/dotnet:${DOTNET_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/dotnet:${DOTNET_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_backend
         env_file:
             - ./.env
@@ -122,7 +122,7 @@ services:
                 - POSTGRES_LANG_NAME=${POSTGRES_LANG_NAME}
                 - POSTGRES_LANG_INPUTFILE=${POSTGRES_LANG_INPUTFILE}
                 - POSTGRES_LANG_CHARMAP=${POSTGRES_LANG_CHARMAP}
-        image: hoshisakan/${PROJECT_NAME}/postgresql:${POSTGRES_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/postgresql:${POSTGRES_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_postgresql
         env_file:
           - ./.env
@@ -146,7 +146,7 @@ services:
 
     db_adminer:
         build: ./conf/postgresql_admin
-        image: hoshisakan/${PROJECT_NAME}/pgadmin:${PGADMIN_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/pgadmin:${PGADMIN_IMAGE_VERSION}
         container_name: ${PROJECT_NAME}_pgadmin
         env_file:
           - ./.env
