@@ -59,7 +59,7 @@ https://reactivities.servepics.com/
 
 * User Login
 
-![LoginForm](https://imgur.com/ozwiVwu.png)
+![LoginForm](https://imgur.com/ZwcswlG.png)
 
 ### Activities page
 
