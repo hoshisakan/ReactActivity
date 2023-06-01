@@ -1,4 +1,4 @@
-# ReactActivity
+# Reactivities
 ## About
 Neil Cummings's Udemy Course : The complete guide to building an app use ASP.NET Core 7.0, React 18.2 (with Typescript) and Mobx, and deploy it to the cloud.
 
