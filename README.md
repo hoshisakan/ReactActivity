@@ -30,7 +30,7 @@ https://reactivities.servepics.com/
 
 * Database: PostgreSQL
 
-* Proxy: Nginx + Websocket + SSL + Let's Encrypt
+* Proxy: Nginx + Websocket + SSL
 
 * Container: Docker
 
