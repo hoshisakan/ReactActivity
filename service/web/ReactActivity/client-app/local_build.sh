@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-SolutionPath="/home/hoshisakan/project/ReactActivity/service/web/ReactActivity/client-app/build"
+SolutionPath="D:\\Files\\Project\\Web\\ReactActivity\\service\\web\\ReactActivity\\client-app\\build"
 
 if [ -d $SolutionPath ]; then
     echo "remove has been build directory. . ."
@@ -20,7 +20,7 @@ fi
 
 echo "Finish build client-app."
 
-OutputPath="/home/hoshisakan/project/ReactActivity/service/web/production/frontend/dist"
+OutputPath="D:\\Files\\Project\\Web\\ReactActivity\\service\\web\\production\\frontend\\dist"
 
 if [ -d $OutputPath ]; then
     echo "Starting remove has been build dist directory. . ."

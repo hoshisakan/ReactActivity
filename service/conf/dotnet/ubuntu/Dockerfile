@@ -1,4 +1,4 @@
-FROM ubuntu:22.10
+FROM ubuntu:23.10
 
 # Add arguments to set timezone and dotnet version
 ARG DOTNET_INSTALLED_VERSION

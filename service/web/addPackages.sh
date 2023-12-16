@@ -28,11 +28,18 @@ if [ "$1" = "API" ]; then
     dotnet add package Quartz --version 3.6.2
     dotnet add package Quartz.Extensions.Hosting --version 3.6.2
     dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis --version 7.0.5
+    dotnet add package Dapper --version 2.0.143
+    dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 7.0.3
 elif [ "$1" = "Persistence" ]; then
     dotnet add package Microsoft.EntityFrameworkCore --version 7.0.4
     dotnet add package Microsoft.EntityFrameworkCore.Design --version 7.0.4
     dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL --version 7.0.3
     dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 7.0.4
+    dotnet add package Dapper --version 2.0.143
+    dotnet add package System.Data.SqlClient --version 4.8.5
+    dotnet add package Microsoft.Extensions.Configuration.Binder --version 6.0.0
+    # dotnet remove package Npgsql
+    dotnet add package Npgsql --version 7.0.4
 elif [ "$1" = "Domain" ]; then
     dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 7.0.4
 elif [ "$1" = "Application" ]; then

@@ -21,5 +21,3 @@ npm install react-infinite-scroller --legacy-peer-deps (if line 19 install react
 npm install @types/react-infinite-scroller
 npm i --save @greatsumini/react-facebook-login
 npm install --save buffer
-npm install @leecheuk/react-google-login
-npm install gapi-script

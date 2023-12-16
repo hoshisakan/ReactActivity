@@ -43,7 +43,7 @@ export default observer(function HomePage() {
                             Register!
                         </Button>
                         <Divider hidden></Divider>
-                        <Link to={'account/forgetPassword'} style={{ textDecoration: 'underline', color: 'white' }}>
+                        <Link to={'account/forgetPasswo<i class="rd'} style={{ textDecoration: 'underline', color: 'white' }}>
                             Forget Password?
                         </Link>
                         <Divider horizontal inverted>

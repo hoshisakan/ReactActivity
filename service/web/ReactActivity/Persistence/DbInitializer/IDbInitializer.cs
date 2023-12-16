@@ -2,6 +2,6 @@ namespace Persistence.DbInitializer
 {
     public interface IDbInitializer
     {
-        Task SeedData();
+        Task<bool> SeedData();
     }
 }

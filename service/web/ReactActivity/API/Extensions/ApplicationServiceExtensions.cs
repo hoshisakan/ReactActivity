@@ -13,6 +13,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore.Migrations;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using API.Services;
+using Persistence.Data;
 
 namespace API.Extensions
 {
@@ -67,7 +69,9 @@ namespace API.Extensions
                 });
             }
 
+            services.AddSingleton<IDapperConnectionProvider, DapperConnectionProvider>();
             services.AddScoped<IDbInitializer, DbInitializer>();
+            services.AddScoped<IDataRestoreService, DataRestoreService>();
             services.AddScoped<IStaticFilePathInitializer, StaticFilePathInitializer>();
             services.AddMediatR(typeof(List.Handler).Assembly);
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);

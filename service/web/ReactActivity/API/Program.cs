@@ -9,6 +9,7 @@ using Serilog.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using API.Services;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -35,7 +36,19 @@ try
     builder.Services.AddControllers();
     builder.Services.AddApplicationServices(builder.Configuration);
     builder.Services.AddIdentityServices(builder.Configuration);
-    builder.Services.AddDataBackupServices(builder.Configuration);
+
+    bool isDevelopment = builder.Environment.IsDevelopment();
+
+    if (isDevelopment)
+    {
+        Console.WriteLine("Development environment");
+        builder.Services.AddDevDataBackupServices(builder.Configuration);
+    }
+    else
+    {
+        Console.WriteLine("Production environment");
+        builder.Services.AddProductDataBackupServices(builder.Configuration);
+    }
 
     // builder.WebHost.UseKestrel(options =>
     // {
@@ -83,13 +96,19 @@ try
 
     try
     {
+        IDataRestoreService dataRestoreService = services.GetRequiredService<IDataRestoreService>();
         IDbInitializer dbInitializer = services.GetRequiredService<IDbInitializer>();
-        await dbInitializer.SeedData();
+        bool isDatabaseExist = await dbInitializer.SeedData();
         IStaticFilePathInitializer staticFilePathInitializer = services.GetRequiredService<IStaticFilePathInitializer>();
         staticFilePathInitializer.StoragePathInitializer();
+        if (!isDatabaseExist)
+        {
+            await dataRestoreService.RestoreData(isDevelopment);
+        }
     }
     catch (Exception ex)
     {
+        Console.WriteLine($"An error occurred while migrating or seeding the database or initializing the static file path: {ex.Message}");
         Log.Error($"An error occurred while migrating or seeding the database or initializing the static file path: {ex.Message}");
     }
 
@@ -97,6 +116,7 @@ try
 }
 catch (Exception ex)
 {
+    Console.WriteLine($"An error occurred while starting the application\nMessage: {ex.Message}\nStack trace: {ex.StackTrace}");
     Log.Error($"An error occurred while starting the application\nMessage: {ex.Message}\nStack trace: {ex.StackTrace}");
 }
 finally

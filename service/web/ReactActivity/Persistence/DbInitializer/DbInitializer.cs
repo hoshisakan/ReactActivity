@@ -1,5 +1,6 @@
 using Domain;
 
+
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,19 +24,41 @@ namespace Persistence.DbInitializer
             _config = config;
         }
 
-        public async Task SeedData()
+        public async Task<bool> SeedData()
         {
             _logger.LogInformation("Seeding database...");
 
-            if (_db.Database.GetPendingMigrationsAsync().Result.Any())
+            bool isDatabaseExist = await _db.Database.CanConnectAsync();
+
+            if (!isDatabaseExist)
             {
-                _logger.LogInformation("Applying migrations...");
+                _logger.LogInformation("Database does not exist, then creating database...");
+                // _db.Database.EnsureCreated();
+                // await _db.Database.MigrateAsync();
+                return false;
+            }
+            else if (isDatabaseExist && _db.Database.GetPendingMigrationsAsync().Result.Any())
+            {
+                _logger.LogInformation("Database already exists, then skip creating database.");
                 await _db.Database.MigrateAsync();
             }
-            else
-            {
-                _logger.LogInformation("No migrations to apply.");
-            }
+
+            // // Check if there are any pending migrations.
+            // if (_db.Database.GetPendingMigrationsAsync().Result.Any())
+            // {
+            //     _logger.LogInformation("Applying migrations...");
+            //     await _db.Database.MigrateAsync();
+            // }
+            // else
+            // {
+            //     _logger.LogInformation("No migrations to apply, auto create a new migration file and database.");
+            //     // Auto migrate database.
+            //     // await _db.Database.MigrateAsync();
+            //     _logger.LogInformation("Auto migration completed, then starting to create tables.");
+            //     // await _db.Database.EnsureCreatedAsync();
+            // }
+
+            // DataRestoreService dataRestoreService = new DataRestoreService(_db, _logger);
 
             if (!_userManager.Users.Any() && !_db.Activities.Any())
             {
@@ -78,7 +101,7 @@ namespace Persistence.DbInitializer
                 if (string.IsNullOrEmpty(defaultNormalUserPassword))
                 {
                     _logger.LogError("Default normal user password is not set in appsettings.json");
-                    return;
+                    throw new Exception("Default normal user password is not set in appsettings.json");
                 }
 
                 foreach (var user in users)
@@ -337,7 +360,11 @@ namespace Persistence.DbInitializer
 
                 await _db.Activities.AddRangeAsync(activities);
                 await _db.SaveChangesAsync();
+
+                _logger.LogInformation("Seeding database completed.");
             };
+            
+            return isDatabaseExist;
         }
     }
 }

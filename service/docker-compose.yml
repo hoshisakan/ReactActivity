@@ -74,7 +74,8 @@ services:
 
     backend:
         build:
-            context: ./conf/dotnet/ubuntu
+            # context: ./conf/dotnet/ubuntu
+            context: ./web
             dockerfile: Dockerfile
             args:
                 - DOTNET_INSTALLED_VERSION=${DOTNET_INSTALLED_VERSION}
@@ -84,7 +85,7 @@ services:
                 - DOTNET_LANG_CHARMAP=${DOTNET_LANG_CHARMAP}
                 - DEBIAN_FRONTEND=${DOTNET_DEBIAN_FRONTEND}
                 - DOTNET_POSTGRESQL_CLIENT_HOME=${DOTNET_POSTGRESQL_CLIENT_HOME}
-                - DOTNET_POSTGRESQL_CLIENT_VERSION=${DOTNET_POSTGRESQL_CLIENT_VERSION}
+                - DOTNET_POSTGRESQL_CLIENT_VERSION=${POSTGRES_VERSION}
                 - POSTGRES_DATA_BACKUP_PATH=:${POSTGRES_DATA_BACKUP_PATH}
                 - DOTNET_PACKAGES_PATH=${DOTNET_PACKAGES_PATH}
         image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/dotnet:${DOTNET_IMAGE_VERSION}
@@ -98,8 +99,9 @@ services:
             - DOTNET_POSTGRES_HOST_IP=${POSTGRES_HOST_IP}
             - DOTNET_POSTGRES_PORT=${POSTGRES_INNER_PORT}
         volumes:
-            - ./web:/app
-            - ./data/postgresql/pgdata_backup:${POSTGRES_DATA_BACKUP_PATH}
+            # - ./web:/app
+            # - ./web/ReactActivity:/app/ReactActivity
+            - ./data/postgresql/pgdata_backup/v${POSTGRES_VERSION}:${POSTGRES_DATA_BACKUP_PATH}
             - ./logs/backend:/var/log/backend
         ports:
             - ${DOTNET_EXTERNAL_HTTP_PORT}:${DOTNET_INNER_HTTP_PORT}
@@ -122,7 +124,7 @@ services:
                 - POSTGRES_LANG_NAME=${POSTGRES_LANG_NAME}
                 - POSTGRES_LANG_INPUTFILE=${POSTGRES_LANG_INPUTFILE}
                 - POSTGRES_LANG_CHARMAP=${POSTGRES_LANG_CHARMAP}
-        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/postgresql:${POSTGRES_IMAGE_VERSION}
+        image: ${CONTAINER_AUTHOR}/${PROJECT_NAME}/postgresql:${POSTGRES_VERSION}
         container_name: ${PROJECT_NAME}_postgresql
         env_file:
           - ./.env
